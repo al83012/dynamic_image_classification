@@ -1,0 +1,7 @@
+[package]
+name = "dynamic_image_classification"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+burn = { version = "*", features = ["train", "wgpu", "vision"] }
