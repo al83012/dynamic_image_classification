@@ -1,7 +1,7 @@
 [package]
 name = "dynamic_image_classification"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-burn = { version = "*", features = ["train", "wgpu", "vision"] }
+burn = { version = "~0.17", features = ["train", "wgpu", "vision"] }
