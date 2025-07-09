@@ -2,6 +2,10 @@ use burn::backend::Wgpu;
 use model::VisionModelConfig;
 
 pub mod model;
+pub mod ppo;
+pub mod image;
+pub mod class;
+pub mod data;
 
 fn main() {
     type MyBackend = Wgpu<f32, i32>;

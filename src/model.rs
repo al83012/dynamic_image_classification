@@ -14,7 +14,7 @@ pub struct VisionModel<B: Backend> {
     lstm: Lstm<B>,
     linear_2: Linear<B>,
     activation: Relu,
-    num_classes: usize,
+    pub num_classes: usize,
 }
 
 #[derive(Config, Debug)]
@@ -68,18 +68,19 @@ impl VisionModelConfig {
     }
 }
 
+#[derive( Clone)]
 pub struct PositioningData<B: Backend>(pub Tensor<B, 1>);
 
 pub struct VisionModelStepResult<B: Backend> {
-    current_classification: Tensor<B, 1>,
-    next_pos_data: PositioningData<B>,
-    next_lstm_state: LstmState<B, 2>,
+    pub current_classification: Tensor<B, 1>,
+    pub next_pos_data: PositioningData<B>,
+    pub next_lstm_state: LstmState<B, 2>,
 }
 
 pub struct VisionModelStepInput<B: Backend> {
-    image_section: Tensor<B, 3>, // [Channels, Width, Height]
-    pos_data: PositioningData<B>,
-    lstm_state: Option<LstmState<B, 2>>,
+    pub image_section: Tensor<B, 3>, // [Channels, Width, Height]
+    pub pos_data: PositioningData<B>,
+    pub lstm_state: Option<LstmState<B, 2>>,
 }
 
 impl<B: Backend> VisionModel<B> {
@@ -112,7 +113,7 @@ impl<B: Backend> VisionModel<B> {
 
         VisionModelStepResult {
             current_classification: classification,
-            next_pos_data: PositioningData::from_tensor(next_pos_data),
+            next_pos_data: PositioningData::from_tensor(next_pos_data.detach()), 
             next_lstm_state: next_state,
         }
     }
@@ -136,5 +137,16 @@ impl<B: Backend> PositioningData<B> {
     }
     pub fn from_tensor(tensor: Tensor<B, 1>) -> Self {
         Self(tensor)
+    }
+    pub fn start(device: &B::Device) -> Self {
+        Self::from_params([0.5, 0.5], 1.0, device)
+    }
+    pub fn get_params(
+        &self
+    ) -> ([f32;2], f32) {
+        let data = self.0.to_data();
+        let vec: Vec<f32> = data.to_vec().expect("PositioningData should be able to be converted to Vec");
+        assert!(vec.len() == 3);
+        ([vec[0], vec[1]], vec[2])
     }
 }

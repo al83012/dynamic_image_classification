@@ -1452,6 +1452,7 @@ name = "dynamic_image_classification"
 version = "0.1.0"
 dependencies = [
  "burn",
+ "image",
 ]
 
 [[package]]
