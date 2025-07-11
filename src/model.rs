@@ -1,4 +1,4 @@
-use burn::prelude::*;
+use burn::{optim::{Adam, AdamConfig}, prelude::*};
 use nn::{
     conv::{Conv2d, Conv2dConfig},
     pool::{AdaptiveAvgPool2d, AdaptiveAvgPool2dConfig},
@@ -12,16 +12,19 @@ pub struct VisionModel<B: Backend> {
     conv_2: Conv2d<B>,
     dropout: Dropout,
     lstm: Lstm<B>,
-    linear_2: Linear<B>,
+    linear_pos: Linear<B>,
+    linear_class: Linear<B>,
     activation: Relu,
+    pub class_lr: f64,
+    pub pos_lr: f64,
     pub num_classes: usize,
 }
 
-#[derive(Config, Debug)]
+#[derive(Config )]
 pub struct VisionModelConfig {
     num_classes: usize,
     #[config(default = "128")]
-    linear_hidden_size: usize,
+    lstm_output_size: usize,
     #[config(default = "128")]
     lstm_hidden_size: usize,
     #[config(default = "[3, 3]")]
@@ -38,6 +41,10 @@ pub struct VisionModelConfig {
     pool_out: [usize; 2],
     #[config(default = "0.4")]
     dropout: f64,
+    #[config(default = "5e-4")]
+    class_lr: f64,
+    #[config(default = "5e-4")]
+    pos_lr: f64,
 }
 
 impl VisionModelConfig {
@@ -48,7 +55,7 @@ impl VisionModelConfig {
         // Pool out is the size every image is scaled down to
         let conv_2_out_flat = conv_2_out_channel * self.pool_out[0] * self.pool_out[1];
         let lstm_input_size = conv_2_out_flat + positioning_data_size;
-        let model_output_size = self.num_classes + positioning_data_size;
+        let model_total_output_size = self.num_classes + positioning_data_size;
         VisionModel {
             pool: AdaptiveAvgPool2dConfig::new(self.pool_out).init(),
 
@@ -61,19 +68,22 @@ impl VisionModelConfig {
                 .init(device),
             dropout: Dropout { prob: self.dropout },
             lstm: LstmConfig::new(lstm_input_size, self.lstm_hidden_size, false).init(device),
-            linear_2: LinearConfig::new(self.linear_hidden_size, model_output_size).init(device),
+            linear_pos: LinearConfig::new(self.lstm_output_size, positioning_data_size).init(device),
+            linear_class: LinearConfig::new(self.lstm_output_size, self.num_classes).init(device),
             activation: Relu::new(),
             num_classes: self.num_classes,
+            class_lr: self.class_lr,
+            pos_lr: self.pos_lr,
         }
     }
 }
 
 #[derive( Clone)]
-pub struct PositioningData<B: Backend>(pub Tensor<B, 1>);
+pub struct PositioningData<B: Backend>(pub Tensor<B, 3>);
 
 pub struct VisionModelStepResult<B: Backend> {
-    pub current_classification: Tensor<B, 1>,
-    pub next_pos_data: PositioningData<B>,
+    pub current_classification: Tensor<B, 3>,
+    pub next_pos: PositioningData<B>,
     pub next_lstm_state: LstmState<B, 2>,
 }
 
@@ -99,28 +109,21 @@ impl<B: Backend> VisionModel<B> {
         let unsqueezed_pos_data = pos_data.0.unsqueeze(); // [batch_size, pos_data]
 
         // Concat the flattened image and pos data (while keeping the 1-sized sequence and batch)
-        let cat_vec = unsafe { vec![x, unsqueezed_pos_data] };
+        let cat_vec =  vec![x, unsqueezed_pos_data] ;
         let x = Tensor::cat(cat_vec, 2).unsqueeze();
         let (x_out, next_state) = self.lstm.forward(x, input.lstm_state);
-        let x = self.linear_2.forward(x_out);
-        // Remove unused dims batchsize and seq_len
-        let x: Tensor<B, 1> = x.unsqueeze_dims(&[0, 1]);
-        let mut split = x
-            .split_with_sizes(vec![self.num_classes, PositioningData::<B>::SIZE], 0)
-            .into_iter();
-        let classification = split.next().unwrap();
-        let next_pos_data = split.next().unwrap();
+
+        let classification = self.linear_class.forward(x_out.clone());
+        let next_pos_data = self.linear_pos.forward(x_out);
+
 
         VisionModelStepResult {
             current_classification: classification,
-            next_pos_data: PositioningData::from_tensor(next_pos_data.detach()), 
+            next_pos: PositioningData(next_pos_data), 
             next_lstm_state: next_state,
         }
     }
 
-    pub fn infer(&self, image: Tensor<B, 3>) -> Tensor<B, 1> {
-        todo!("Do the iterations...")
-    }
 }
 
 impl<B: Backend> PositioningData<B> {
@@ -135,16 +138,13 @@ impl<B: Backend> PositioningData<B> {
             device,
         ))
     }
-    pub fn from_tensor(tensor: Tensor<B, 1>) -> Self {
-        Self(tensor)
-    }
     pub fn start(device: &B::Device) -> Self {
         Self::from_params([0.5, 0.5], 1.0, device)
     }
-    pub fn get_params(
+    pub fn get_params_detach(
         &self
     ) -> ([f32;2], f32) {
-        let data = self.0.to_data();
+        let data = self.0.clone().detach().to_data();
         let vec: Vec<f32> = data.to_vec().expect("PositioningData should be able to be converted to Vec");
         assert!(vec.len() == 3);
         ([vec[0], vec[1]], vec[2])
