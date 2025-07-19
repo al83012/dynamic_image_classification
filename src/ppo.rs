@@ -3,6 +3,7 @@ use burn::{
         adaptor::OptimizerAdaptor, Adam, AdamState, GradientsParams, Optimizer, SimpleOptimizer,
     },
     prelude::Backend,
+    record::CompactRecorder,
     tensor::backend::AutodiffBackend,
 };
 use image::GenericImageView;
@@ -50,10 +51,14 @@ pub fn train<B: AutodiffBackend>(
     let image_tensor = data.image;
     let target = data.classification as usize;
 
-    let idx_tensor: Tensor<B, 1, Int> = Tensor::from_data([target], device);
-    let class_oh_target_int: Tensor<B, 1, Int> = idx_tensor.one_hot(model.num_classes);
-    let class_oh_target: Tensor<B, 3> = class_oh_target_int.float().unsqueeze_dims(&[0, 0]);
-    let class_oh_target_vec: Vec<f32> = class_oh_target.to_data().to_vec().unwrap();
+    // let idx_tensor: Tensor<B, 1, Int> = Tensor::from_data([target], device);
+    // let class_oh_target_int: Tensor<B, 1, Int> = idx_tensor.one_hot(model.num_classes);
+    // let class_oh_target: Tensor<B, 3> = class_oh_target_int.float().unsqueeze_dims(&[0, 0]);
+    // let class_oh_target_vec: Vec<f32> = class_oh_target.to_data().to_vec().unwrap();
+    let class_oh_target: Tensor<B, 3> =
+        Tensor::<B, 1>::from_data(if target == 0 { [1.0, 0.0] } else { [0.0, 1.0] }, device).unsqueeze_dims(&[0, 1]);
+
+    println!("Extracted class data");
 
     let pos_data = PositioningData::<B>::start(device);
     let mut lstm_state: Option<LstmState<B, 2>> = None;
@@ -70,8 +75,13 @@ pub fn train<B: AutodiffBackend>(
 
     let mut last_loss = 0.0;
 
+
+
+    println!("Setup for iteration");
+
     for i in 0..max_iter_count {
         current_iter = i;
+    println!("Iter[{current_iter:?}]");
         let ([cx, cy], rel_size) = pos_data.get_params_detach();
         let image_section = extract_section(image_tensor.clone(), cx, cy, rel_size);
         let step_in = VisionModelStepInput {
@@ -151,7 +161,12 @@ fn tensor_argmax<B: Backend>(t: Tensor<B, 1>) -> (usize, f32) {
         .unwrap()
 }
 
-pub fn train_all<B: AutodiffBackend>(mut model: VisionModel<B>, device: &B::Device, optim_data: &mut OptimizerData<B>) -> VisionModel<B> {
+pub fn train_all<B: AutodiffBackend>(
+    mut model: VisionModel<B>,
+    device: &B::Device,
+    optim_data: &mut OptimizerData<B>,
+) -> VisionModel<B> {
+    println!("loading training folder");
     let training_folder =
         fs::read_dir("./data/archive/Training/Training").expect("Unable to open Training Data");
     let mut entries = training_folder.into_iter().collect::<Vec<_>>();
@@ -159,10 +174,12 @@ pub fn train_all<B: AutodiffBackend>(mut model: VisionModel<B>, device: &B::Devi
 
     entries.shuffle(&mut rng);
 
+    println!("processing entries");
     for chunk in entries.chunks(50) {
         for entry in chunk {
             let entry = entry.as_ref().expect("Unable to read dir entry");
             let file_name = entry.file_name().to_string_lossy().to_string();
+            println!("Loading {file_name}");
             let class = if file_name.starts_with("not") { 0 } else { 1 };
 
             let image = load_image::<B>(&format!("Training/Training/{file_name}"), device);
@@ -177,8 +194,17 @@ pub fn train_all<B: AutodiffBackend>(mut model: VisionModel<B>, device: &B::Devi
             println!("{stats:#?}");
         }
 
-        todo!();
+        create_artifact_dir("model_artifacts");
+        model
+            .clone()
+            .save_file("model_artifacts", &CompactRecorder::new());
     }
 
     model
+}
+
+fn create_artifact_dir(artifact_dir: &str) {
+    // Remove existing artifacts before to get an accurate learner summary
+    std::fs::remove_dir_all(artifact_dir).ok();
+    std::fs::create_dir_all(artifact_dir).ok();
 }

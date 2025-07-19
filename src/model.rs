@@ -133,10 +133,10 @@ impl<B: Backend> PositioningData<B> {
         selection_coverage: f32,
         device: &B::Device,
     ) -> Self {
-        Self(Tensor::from_floats(
+        Self(Tensor::<B, 1>::from_floats(
             [section_center[0], section_center[1], selection_coverage],
             device,
-        ))
+        ).unsqueeze_dims(&[0, 0]))
     }
     pub fn start(device: &B::Device) -> Self {
         Self::from_params([0.5, 0.5], 1.0, device)
