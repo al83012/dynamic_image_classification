@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 burn = { version = "~0.17", features = ["train", "wgpu", "vision"] }
 image = "*"
+rand = "*"

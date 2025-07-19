@@ -1,8 +1,10 @@
 use burn::prelude::*;
 use nn::pool::AdaptiveAvgPool2d;
 
+use crate::data::ClassificationBatch;
+
 // Tensor[channels, x, y]
-pub const IMAGE_FOLDER: &str = "data";
+pub const IMAGE_FOLDER: &str = "data/archive/";
 pub fn load_image<B: Backend>(name: &str, device: &B::Device) -> Tensor<B, 3> {
     let img = image::open(format!("{IMAGE_FOLDER}/{name}.png"))
         .expect("Error loading image")
