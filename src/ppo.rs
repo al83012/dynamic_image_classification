@@ -56,7 +56,8 @@ pub fn train<B: AutodiffBackend>(
     // let class_oh_target: Tensor<B, 3> = class_oh_target_int.float().unsqueeze_dims(&[0, 0]);
     // let class_oh_target_vec: Vec<f32> = class_oh_target.to_data().to_vec().unwrap();
     let class_oh_target: Tensor<B, 3> =
-        Tensor::<B, 1>::from_data(if target == 0 { [1.0, 0.0] } else { [0.0, 1.0] }, device).unsqueeze_dims(&[0, 1]);
+        Tensor::<B, 1>::from_data(if target == 0 { [1.0, 0.0] } else { [0.0, 1.0] }, device)
+            .unsqueeze_dims(&[0, 1]);
 
     println!("Extracted class data");
 
@@ -75,13 +76,11 @@ pub fn train<B: AutodiffBackend>(
 
     let mut last_loss = 0.0;
 
-
-
     println!("Setup for iteration");
 
     for i in 0..max_iter_count {
         current_iter = i;
-    println!("Iter[{current_iter:?}]");
+        println!("Iter[{current_iter:?}]");
         let ([cx, cy], rel_size) = pos_data.get_params_detach();
         let image_section = extract_section(image_tensor.clone(), cx, cy, rel_size);
         let step_in = VisionModelStepInput {
@@ -89,8 +88,11 @@ pub fn train<B: AutodiffBackend>(
             pos_data: pos_data.clone(),
             lstm_state,
         };
+
+        println!("Before fwd");
         let step_out = model.forward(step_in);
 
+        println!("After fwd");
         lstm_state = Some(step_out.next_lstm_state);
 
         let class_out = step_out.current_classification;
@@ -99,7 +101,7 @@ pub fn train<B: AutodiffBackend>(
         let (highest_class, certainty) = tensor_argmax(class_out.clone().squeeze_dims(&[0, 0]));
 
         let class_loss = mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Mean);
-        let mut class_reward: f32 = class_loss.clone().detach().into_data().to_vec().unwrap()[0];
+        let class_reward: f32 = class_loss.clone().detach().into_data().to_vec().unwrap()[0];
 
         let class_grad = class_loss.backward();
         let class_grad_params = GradientsParams::from_grads(class_grad, &model);
