@@ -40,13 +40,13 @@ pub struct VisionModelConfig {
     conv_1_kernel_count: usize,
     #[config(default = "8")]
     conv_2_kernel_count: usize,
-    #[config(default = "[8, 8]")]
+    #[config(default = "[6, 6]")]
     pool_out: [usize; 2],
     #[config(default = "0.4")]
     dropout: f64,
-    #[config(default = "5e-4")]
+    #[config(default = "1e-3")]
     class_lr: f64,
-    #[config(default = "5e-4")]
+    #[config(default = "5e-3")]
     pos_lr: f64,
 }
 
@@ -123,6 +123,8 @@ impl<B: Backend> VisionModel<B> {
 
         // println!("Conv 1 output shape: {conv_1_out_shape:?}");
         let x = self.conv_2.forward(x);
+
+        let x = self.dropout.forward(x);
 
         // let conv_2_out_shape = x.shape();
         // println!("Conv 2 output shape: {conv_2_out_shape:?}");

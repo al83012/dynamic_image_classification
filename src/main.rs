@@ -20,7 +20,7 @@ fn main() {
         pos_optim: AdamConfig::new().init(),
     };
 
-    model = train_all::<MyAutodiffBackend>(model, &device, &mut optim_data);
+    model = train_all::<MyAutodiffBackend>(model, &device, &mut optim_data, 100);
 
 
 }
