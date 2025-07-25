@@ -98,13 +98,19 @@ pub fn train<B: AutodiffBackend>(
         let class_out = step_out.current_classification;
         let pos_out = step_out.next_pos.0;
 
-        let (highest_class, certainty) = tensor_argmax(class_out.clone().squeeze_dims(&[0, 0]));
+        let (highest_class, certainty) = tensor_argmax(class_out.clone().squeeze_dims(&[0, 1]));
+
+        println!("After argmax");
 
         let class_loss = mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Mean);
         let class_reward: f32 = class_loss.clone().detach().into_data().to_vec().unwrap()[0];
 
+        println!("After loss");
+
         let class_grad = class_loss.backward();
         let class_grad_params = GradientsParams::from_grads(class_grad, &model);
+
+
 
         let pos_out_dummy_diff = pos_out.mean();
         pos_out_dummy_diff_acc = Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);

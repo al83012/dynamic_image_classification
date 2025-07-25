@@ -58,15 +58,15 @@ impl VisionModelConfig {
         
         let conv_1_out_img_dim = [self.pool_out[0] - 2, self.pool_out[1] - 2];
         let conv_2_out_img_dim = [conv_1_out_img_dim[0] - 2, conv_1_out_img_dim[1] - 2];
-        // Pool out is the size every image is scaled down to
+
         let conv_2_out_flat = conv_2_out_channel * conv_2_out_img_dim[0] * conv_2_out_img_dim[1];
         let lstm_input_size = conv_2_out_flat + positioning_data_size;
         let model_total_output_size = self.num_classes + positioning_data_size;
 
-        println!("conv_2_out_channel = {}", conv_2_out_channel);
-        println!("conv_2_out_flat = {}", conv_2_out_flat);
-        println!("positioning_data_size = {}", positioning_data_size);
-        println!("lstm_input_size = {}", lstm_input_size);
+        // println!("conv_2_out_channel = {}", conv_2_out_channel);
+        // println!("conv_2_out_flat = {}", conv_2_out_flat);
+        // println!("positioning_data_size = {}", positioning_data_size);
+        // println!("lstm_input_size = {}", lstm_input_size);
 
         VisionModel {
             pool: AdaptiveAvgPool2dConfig::new(self.pool_out).init(),
@@ -114,18 +114,18 @@ impl<B: Backend> VisionModel<B> {
 
         let x = self.pool.forward(image_batched);
 
-        let pool_out_shape = x.shape();
+        // let pool_out_shape = x.shape();
 
-        println!("Pool output shape: {pool_out_shape:?}");
+        // println!("Pool output shape: {pool_out_shape:?}");
         let x = self.conv_1.forward(x);
 
-        let conv_1_out_shape = x.shape();
+        // let conv_1_out_shape = x.shape();
 
-        println!("Conv 1 output shape: {conv_1_out_shape:?}");
+        // println!("Conv 1 output shape: {conv_1_out_shape:?}");
         let x = self.conv_2.forward(x);
 
-        let conv_2_out_shape = x.shape();
-        println!("Conv 2 output shape: {conv_2_out_shape:?}");
+        // let conv_2_out_shape = x.shape();
+        // println!("Conv 2 output shape: {conv_2_out_shape:?}");
         //Flatten the image-dim
         let x: Tensor<B, 2> = x.flatten(1, 3); //[batch_size, image net out]
                                                //flattened_image]
@@ -134,13 +134,13 @@ impl<B: Backend> VisionModel<B> {
         // Concat the flattened image and pos data (while keeping the 1-sized sequence and batch)
         let cat_vec = vec![x, squeezed_pos_data];
         let x = Tensor::cat(cat_vec, 1).unsqueeze();
-        println!("Before Lstm");
+        // println!("Before Lstm");
         let (x_out, next_state) = self.lstm.forward(x, input.lstm_state);
 
-        println!("Before Linear class");
+        // println!("Before Linear class");
         let classification = self.linear_class.forward(x_out.clone());
 
-        println!("Before Linear pos");
+        // println!("Before Linear pos");
         let next_pos_data = self.linear_pos.forward(x_out);
 
         VisionModelStepResult {

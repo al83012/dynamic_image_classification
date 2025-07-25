@@ -14,7 +14,7 @@ fn main() {
 
     let device = Default::default();
     
-    let mut model = VisionModelConfig::new(10).init(&device);
+    let mut model = VisionModelConfig::new(2).init(&device);
     let mut optim_data = OptimizerData::<MyAutodiffBackend>{
         class_optim: AdamConfig::new().init(),
         pos_optim: AdamConfig::new().init(),
