@@ -93,11 +93,14 @@ pub fn train<B: AutodiffBackend>(
     let mut avg_norm_quality = 0.0;
 
     // println!("Setup for iteration");
+    // log::info!("Setup for iteration");
 
     for i in 0..max_iter_count {
+        // log::info!("Iteration Start [{i}]");
         current_iter = i;
         // println!("Iter[{current_iter:?}]");
         let ([cx, cy], rel_size) = pos_data.get_params_detach();
+        // log::info!("After pos_data_unpacking");
         let image_section = extract_section(image_tensor.clone(), cx, cy, rel_size);
         let step_in = VisionModelStepInput {
             image_section,
@@ -105,8 +108,13 @@ pub fn train<B: AutodiffBackend>(
             lstm_state,
         };
 
+        // log::info!("Loaded input");
+
         // println!("Before fwd");
         let step_out = model.forward(step_in);
+
+
+        // log::info!("Did forward");
 
         // println!("After fwd");
         lstm_state = Some(step_out.next_lstm_state);
@@ -115,6 +123,9 @@ pub fn train<B: AutodiffBackend>(
         let pos_out = step_out.next_pos.0;
 
         pos_data = PositioningData(pos_out.clone().detach());
+
+
+        // log::info!("After repackaging pos data");
 
         let norm_quality = pos_data.norm_quality().atan().clamp(0.0, 1.0) * 1.2;
 
@@ -130,10 +141,15 @@ pub fn train<B: AutodiffBackend>(
             .to_data()
             .to_vec()
             .expect("Error unwrapping output");
+
+
         // assert_eq!(output_vec.len(), 2);
 
         let concentration = concentration(squeezed_class.clone());
         let can_finish = concentration > 0.5 && i >= 2;
+
+
+        // log::info!("After concentration calc");
 
         // println!("After argmax");
 
@@ -146,6 +162,9 @@ pub fn train<B: AutodiffBackend>(
 
         let class_grad = class_loss.backward();
         let class_grad_params = GradientsParams::from_grads(class_grad, &model);
+
+
+        // log::info!("did loss and gradients");
 
         let pos_out_dummy_diff = pos_out.mean();
         pos_out_dummy_diff_acc = Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
@@ -162,6 +181,8 @@ pub fn train<B: AutodiffBackend>(
 
         acc_reward += class_loss_single;
     }
+
+    // log::info!("Passed iterations");
 
     avg_norm_quality /= (current_iter + 1) as f32;
 
@@ -196,6 +217,7 @@ pub fn train<B: AutodiffBackend>(
 
     model = pos_optim.step(model.pos_lr, model, pos_dummy_grad_params);
 
+    // log::info!("Did full train for image");
     (
         model,
         StepStatistics {
@@ -238,7 +260,6 @@ pub fn train_all<B: AutodiffBackend>(
 
     // println!("loading training folder");
 
-    let mut total_step_id = 0;
 
     for epoch in 0..epochs {
         // println!("processing entries");
@@ -246,8 +267,10 @@ pub fn train_all<B: AutodiffBackend>(
             let training_input = data_loader.next(device);
 
             // println!("Loading {file_name}");
-
+            log::info!("Before step (file = {i}, epoch = {i})");
             let (model_out, stats) = train(training_input, model, device, 100, optim_data);
+
+            log::info!("After step (file = {i}, epoch = {epoch})");
             model = model_out;
 
             let new_iter_metric = MetricState::Numeric(
@@ -310,12 +333,12 @@ pub fn train_all<B: AutodiffBackend>(
 
             // println!("{stats:#?}");
 
-            if i % 50 == 0 {
-                create_artifact_dir("model_artifacts");
-                model
-                    .clone()
-                    .save_file("model_artifacts", &CompactRecorder::new());
-            }
+            // if i % 50 == 0 {
+            //     create_artifact_dir("model_artifacts");
+            //     model
+            //         .clone()
+            //         .save_file("model_artifacts", &CompactRecorder::new());
+            // }
         }
     }
 

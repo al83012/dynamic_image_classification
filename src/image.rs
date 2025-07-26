@@ -1,6 +1,6 @@
 use burn::prelude::*;
-use nn::pool::AdaptiveAvgPool2d;
 use log;
+use nn::pool::AdaptiveAvgPool2d;
 
 use crate::data::ClassificationBatch;
 
@@ -61,15 +61,13 @@ pub fn extract_section<B: Backend>(
         (py - section_height / 2, py + section_height / 2)
     };
 
-    //slice all three channels and the block of x and y coords
+    log::info!("SHAPE: {:?}", image.shape());
 
-    if y0 == 744 {
-        log::info!("It happened: \ncx{cx}, cy{cy}, square_rel_size{square_rel_size}, shape{:?}", image.shape())
-    }
+    log::info!("[{x0}..{x1}, {y0}..{y1}]");
+
     let slice = image.slice([0..3, x0..x1, y0..y1]);
-    if y0 == 744 {
-        log::info!("Still here");
-    }
-    slice
 
+    log::info!("Made it");
+
+    slice
 }
