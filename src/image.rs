@@ -51,13 +51,21 @@ pub fn extract_section<B: Backend>(
         (px - section_width / 2, px + section_width / 2)
     };
 
+    log::info!("py = {py}, section_height = {section_height}, height = {h}");
+
     let (y0, y1) = if py < section_height / 2 {
         // Ends in the negative
         (0, section_height)
+
     } else if py + section_height / 2 > h - 1 {
         // Out of bounds
+        
+        log::info!("Pos out of bounds");
         (h - 1 - section_height, h - 1)
+
     } else {
+
+        log::info!("Valid");
         (py - section_height / 2, py + section_height / 2)
     };
 
