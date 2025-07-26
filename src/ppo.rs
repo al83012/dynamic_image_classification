@@ -133,7 +133,7 @@ pub fn train<B: AutodiffBackend>(
         // assert_eq!(output_vec.len(), 2);
 
         let concentration = concentration(squeezed_class.clone());
-        let can_finish = concentration > 0.5;
+        let can_finish = concentration > 0.5 && i >= 2;
 
         // println!("After argmax");
 

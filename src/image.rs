@@ -1,5 +1,6 @@
 use burn::prelude::*;
 use nn::pool::AdaptiveAvgPool2d;
+use log;
 
 use crate::data::ClassificationBatch;
 
@@ -40,17 +41,35 @@ pub fn extract_section<B: Backend>(
     let section_width = (w as f32 * clamped_size) as usize;
     let section_height = (h as f32 * clamped_size) as usize;
 
-    let desired_x0 = px.saturating_sub(section_width / 2);
-    let desired_y0 = py.saturating_sub(section_height / 2);
+    let (x0, x1) = if px < section_width / 2 {
+        // Ends in the negative
+        (0, section_width)
+    } else if px + section_width / 2 > w - 1 {
+        // Out of bounds
+        (w - 1 - section_width, w - 1)
+    } else {
+        (px - section_width / 2, px + section_width / 2)
+    };
 
-    let desired_x1 = (desired_x0 + section_width).min(w - 2);
-    let desired_y1 = (desired_y0 + section_height).min(h - 2);
-
-    let desired_x0 = (desired_x1 - section_width).saturating_sub(1);
-    let desired_y0 = (desired_y1 - section_height).saturating_sub(1);
-
-
+    let (y0, y1) = if py < section_height / 2 {
+        // Ends in the negative
+        (0, section_height)
+    } else if py + section_height / 2 > h - 1 {
+        // Out of bounds
+        (h - 1 - section_height, h - 1)
+    } else {
+        (py - section_height / 2, py + section_height / 2)
+    };
 
     //slice all three channels and the block of x and y coords
-    image.slice([0..3, desired_x0..desired_x1, desired_y0..desired_y1])
+
+    if y0 == 744 {
+        log::info!("It happened: \ncx{cx}, cy{cy}, square_rel_size{square_rel_size}, shape{:?}", image.shape())
+    }
+    let slice = image.slice([0..3, x0..x1, y0..y1]);
+    if y0 == 744 {
+        log::info!("Still here");
+    }
+    slice
+
 }

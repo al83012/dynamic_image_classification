@@ -1,0 +1,851 @@
+INFO - Hello, world!
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\nv-vk64.json" from PnP registry: E
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\amd-vulkan64.json" from PnP registry: E
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\Users\arnel\Desktop\Games\Steam\SteamOverlayVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\Users\arnel\Desktop\Games\Steam\SteamFossilizeVulkanLayer64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\Program Files (x86)\Overwolf\0.280.1.4\ow-vulkan-overlay64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\Program Files (x86)\Overwolf\0.280.1.4\ow-graphics-vulkan64.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\nv-vk64.json (file version 1.0.1)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\amd-vulkan64.json (file version 1.0.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Users\arnel\Desktop\Games\Steam\SteamOverlayVulkanLayer64.json (file version 1.0.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Users\arnel\Desktop\Games\Steam\SteamFossilizeVulkanLayer64.json (file version 1.0.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Program Files (x86)\Overwolf\0.280.1.4\ow-vulkan-overlay64.json (file version 1.1.2)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\Program Files (x86)\Overwolf\0.280.1.4\ow-graphics-vulkan64.json (file version 1.1.2)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Checking for Layer Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: opening device PCI\VEN_1002&DEV_1681&SUBSYS_1F1C1043&REV_C8\4&31f4ec98&0&0041
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(2) Does not contain a value for "VulkanExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 4 - SWD\DRIVERENUM\AMDFDANS&5&B5042C3&0
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(4) Does not contain a value for "VulkanExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 5 - SWD\DRIVERENUM\AMDOCL&5&B5042C3&0
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(5) Does not contain a value for "VulkanExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 6 - SWD\DRIVERENUM\AMDWIN&5&B5042C3&0
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(6) Does not contain a value for "VulkanExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: Opening child device 7 - DISPLAY\AUO4B9D\5&B5042C3&0&UID256
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: opening device PCI\VEN_10DE&DEV_24A0&SUBSYS_1F1C1043&REV_A1\4&543ec89&0&0009
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_entry: Device ID(1) Does not contain a value for "VulkanExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: unable to open child-device error:13
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_device_registry_files: found no registry files
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_api_dump.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_gfxreconstruct.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_synchronization2.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_validation.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_monitor.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_screenshot.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_profiles.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_shader_object.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Located json file "C:\VulkanSDK\1.3.296.0\Bin\VkLayer_crash_diagnostic.json" from registry "HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\ExplicitLayers"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_api_dump.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_gfxreconstruct.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_synchronization2.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_validation.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_monitor.json (file version 1.0.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_screenshot.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_profiles.json (file version 1.2.1)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_shader_object.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found manifest file C:\VulkanSDK\1.3.296.0\Bin\VkLayer_crash_diagnostic.json (file version 1.2.0)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_get_app_package_manifest_path: Failed to find mapping layers packages by family name
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Checking for Driver Manifest files in Registry at HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\Drivers
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\nv-vk64.json" from PnP registry: E
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	windows_add_json_entry: Located json file "C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\amd-vulkan64.json" from PnP registry: E
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found no registry files in HKEY_LOCAL_MACHINE\SOFTWARE\Khronos\Vulkan\Drivers
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found ICD manifest file C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\nv-vk64.json, version 1.0.1
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Found ICD manifest file C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\amd-vulkan64.json, version 1.0.0
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+WARN - GENERAL [Loader Message (0x0)]
+	Layer VK_LAYER_OW_OVERLAY uses API version 1.2 which is older than the application specified API version of 1.3. May cause issues.
+WARN - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+WARN - GENERAL [Loader Message (0x0)]
+	Layer VK_LAYER_OW_OBS_HOOK uses API version 1.2 which is older than the application specified API version of 1.3. May cause issues.
+WARN - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_KHRONOS_validation" (C:\VulkanSDK\1.3.296.0\Bin\.\VkLayer_khronos_validation.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_OW_OBS_HOOK" (C:\Program Files (x86)\Overwolf\0.280.1.4\.\ow-graphics-vulkan.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_OW_OVERLAY" (C:\Program Files (x86)\Overwolf\0.280.1.4\.\owclient.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_AMD_switchable_graphics" (C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\.\amdvlk64.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Insert instance layer "VK_LAYER_NV_optimus" (C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\.\nvoglv64.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	vkCreateInstance layer callstack setup to:
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   <Application>
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   <Loader>
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_NV_optimus
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_LAYER_NV_OPTIMUS_1
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\nv-vk64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\.\nvoglv64.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_AMD_switchable_graphics
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\amd-vulkan64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\.\amdvlk64.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_OW_OVERLAY
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_VULKAN_OW_OVERLAY_LAYER
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\Program Files (x86)\Overwolf\0.280.1.4\ow-vulkan-overlay64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\Program Files (x86)\Overwolf\0.280.1.4\.\owclient.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_OW_OBS_HOOK
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_VULKAN_OW_OBS_CAPTURE
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\Program Files (x86)\Overwolf\0.280.1.4\ow-graphics-vulkan64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\Program Files (x86)\Overwolf\0.280.1.4\.\ow-graphics-vulkan.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_KHRONOS_validation
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Explicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_validation.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\VulkanSDK\1.3.296.0\Bin\.\VkLayer_khronos_validation.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   <Drivers>
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - VALIDATION [WARNING-CreateInstance-status-message (0x23dfd876)]
+	Validation Information: [ WARNING-CreateInstance-status-message ] Object 0: handle = 0x20dbf32ca80, type = VK_OBJECT_TYPE_INSTANCE; | MessageID = 0x23dfd876 | vkCreateInstance():  Khronos Validation Layer Active:
+    Current Enables: VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT.
+    Current Disables: None.
+
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - Enabling debug utils
+INFO - Using adapter AdapterInfo { name: "NVIDIA GeForce RTX 3070 Ti Laptop GPU", vendor: 4318, device: 9376, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "566.36", backend: Vulkan }
+WARN - Feature MAPPABLE_PRIMARY_BUFFERS enabled on a discrete gpu. This is a massive performance footgun and likely not what you wanted
+INFO - GENERAL [Loader Message (0x0)]
+	Inserted device layer "VK_LAYER_KHRONOS_validation" (C:\VulkanSDK\1.3.296.0\Bin\.\VkLayer_khronos_validation.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Inserted device layer "VK_LAYER_OW_OBS_HOOK" (C:\Program Files (x86)\Overwolf\0.280.1.4\.\ow-graphics-vulkan.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Inserted device layer "VK_LAYER_OW_OVERLAY" (C:\Program Files (x86)\Overwolf\0.280.1.4\.\owclient.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Failed to find vkGetDeviceProcAddr in layer "C:\Windows\System32\DriverStore\FileRepository\u0403196.inf_amd64_d0c41aa30f8bcfb2\B402774\.\amdvlk64.dll"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	Inserted device layer "VK_LAYER_NV_optimus" (C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\.\nvoglv64.dll)
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	vkCreateDevice layer callstack setup to:
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   <Application>
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   <Loader>
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_NV_optimus
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_LAYER_NV_OPTIMUS_1
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\nv-vk64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\.\nvoglv64.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_OW_OVERLAY
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_VULKAN_OW_OVERLAY_LAYER
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\Program Files (x86)\Overwolf\0.280.1.4\ow-vulkan-overlay64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\Program Files (x86)\Overwolf\0.280.1.4\.\owclient.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_OW_OBS_HOOK
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Implicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	               Disable Env Var:  DISABLE_VULKAN_OW_OBS_CAPTURE
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\Program Files (x86)\Overwolf\0.280.1.4\ow-graphics-vulkan64.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\Program Files (x86)\Overwolf\0.280.1.4\.\ow-graphics-vulkan.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   VK_LAYER_KHRONOS_validation
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Type: Explicit
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Manifest: C:\VulkanSDK\1.3.296.0\Bin\VkLayer_khronos_validation.json
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	           Library:  C:\VulkanSDK\1.3.296.0\Bin\.\VkLayer_khronos_validation.dll
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	     ||
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	   <Device>
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - GENERAL [Loader Message (0x0)]
+	       Using "NVIDIA GeForce RTX 3070 Ti Laptop GPU" with driver: "C:\WINDOWS\System32\DriverStore\FileRepository\nvami.inf_amd64_60e995a01594d69e\.\nvoglv64.dll"
+INFO - 	objects: (type: INSTANCE, hndl: 0x20dbf32ca80, name: ?)
+INFO - VALIDATION [WARNING-cache-file-error (0xb8515d13)]
+	Validation Information: [ WARNING-cache-file-error ] | MessageID = 0xb8515d13 | vkCreateDevice():  Cannot open shader validation cache at C:\Users\arnel\AppData\Local\Temp/shader_validation_cache.bin for reading (it may not exist yet)
+INFO - Created wgpu compute server on device Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: Id(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(SHADER_FLOAT32_ATOMIC | TEXTURE_FORMAT_16BIT_NORM | TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES | PIPELINE_STATISTICS_QUERY | TIMESTAMP_QUERY_INSIDE_ENCODERS | TIMESTAMP_QUERY_INSIDE_PASSES | MAPPABLE_PRIMARY_BUFFERS | TEXTURE_BINDING_ARRAY | BUFFER_BINDING_ARRAY | STORAGE_RESOURCE_BINDING_ARRAY | SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING | STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING | PARTIALLY_BOUND_BINDING_ARRAY | MULTI_DRAW_INDIRECT | MULTI_DRAW_INDIRECT_COUNT | PUSH_CONSTANTS | ADDRESS_MODE_CLAMP_TO_ZERO | ADDRESS_MODE_CLAMP_TO_BORDER | POLYGON_MODE_LINE | POLYGON_MODE_POINT | CONSERVATIVE_RASTERIZATION | VERTEX_WRITABLE_STORAGE | CLEAR_TEXTURE | SPIRV_SHADER_PASSTHROUGH | MULTIVIEW | TEXTURE_ATOMIC | TEXTURE_FORMAT_NV12 | EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE | EXPERIMENTAL_RAY_QUERY | SHADER_F64 | SHADER_I16 | SHADER_PRIMITIVE_INDEX | SHADER_INT64 | SUBGROUP | SUBGROUP_VERTEX | SUBGROUP_BARRIER | PIPELINE_CACHE | SHADER_INT64_ATOMIC_MIN_MAX | SHADER_INT64_ATOMIC_ALL_OPS | VULKAN_EXTERNAL_MEMORY_WIN32 | TEXTURE_INT64_ATOMIC | EXPERIMENTAL_MESH_SHADER | EXPERIMENTAL_RAY_HIT_VERTEX_RETURN | EXPERIMENTAL_MESH_SHADER_MULTIVIEW), features_webgpu: FeaturesWebGPU(DEPTH_CLIP_CONTROL | DEPTH32FLOAT_STENCIL8 | TEXTURE_COMPRESSION_BC | TEXTURE_COMPRESSION_BC_SLICED_3D | TIMESTAMP_QUERY | INDIRECT_FIRST_INSTANCE | RG11B10UFLOAT_RENDERABLE | BGRA8UNORM_STORAGE | FLOAT32_FILTERABLE | DUAL_SOURCE_BLENDING) } }) } => AdapterInfo { name: "NVIDIA GeForce RTX 3070 Ti Laptop GPU", vendor: 4318, device: 9376, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "566.36", backend: Vulkan }
+INFO - Load autotune cache ...
+INFO - Loaded 14 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 47 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 11 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 20 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 2 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 101 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 4 autotune cached entries
+INFO - File exists, replacing
+INFO - Hello, world!
+INFO - Using adapter AdapterInfo { name: "NVIDIA GeForce RTX 3070 Ti Laptop GPU", vendor: 4318, device: 9376, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "566.36", backend: Vulkan }
+WARN - Feature MAPPABLE_PRIMARY_BUFFERS enabled on a discrete gpu. This is a massive performance footgun and likely not what you wanted
+INFO - Created wgpu compute server on device Device { inner: Core(CoreDevice { context: ContextWgpuCore { type: "Native" }, id: Id(0,1), error_sink: Mutex { data: ErrorSink }, features: Features { features_wgpu: FeaturesWGPU(SHADER_FLOAT32_ATOMIC | TEXTURE_FORMAT_16BIT_NORM | TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES | PIPELINE_STATISTICS_QUERY | TIMESTAMP_QUERY_INSIDE_ENCODERS | TIMESTAMP_QUERY_INSIDE_PASSES | MAPPABLE_PRIMARY_BUFFERS | TEXTURE_BINDING_ARRAY | BUFFER_BINDING_ARRAY | STORAGE_RESOURCE_BINDING_ARRAY | SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING | STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING | PARTIALLY_BOUND_BINDING_ARRAY | MULTI_DRAW_INDIRECT | MULTI_DRAW_INDIRECT_COUNT | PUSH_CONSTANTS | ADDRESS_MODE_CLAMP_TO_ZERO | ADDRESS_MODE_CLAMP_TO_BORDER | POLYGON_MODE_LINE | POLYGON_MODE_POINT | CONSERVATIVE_RASTERIZATION | VERTEX_WRITABLE_STORAGE | CLEAR_TEXTURE | SPIRV_SHADER_PASSTHROUGH | MULTIVIEW | TEXTURE_ATOMIC | TEXTURE_FORMAT_NV12 | EXPERIMENTAL_RAY_TRACING_ACCELERATION_STRUCTURE | EXPERIMENTAL_RAY_QUERY | SHADER_F64 | SHADER_I16 | SHADER_PRIMITIVE_INDEX | SHADER_INT64 | SUBGROUP | SUBGROUP_VERTEX | SUBGROUP_BARRIER | PIPELINE_CACHE | SHADER_INT64_ATOMIC_MIN_MAX | SHADER_INT64_ATOMIC_ALL_OPS | VULKAN_EXTERNAL_MEMORY_WIN32 | TEXTURE_INT64_ATOMIC | EXPERIMENTAL_MESH_SHADER | EXPERIMENTAL_RAY_HIT_VERTEX_RETURN | EXPERIMENTAL_MESH_SHADER_MULTIVIEW), features_webgpu: FeaturesWebGPU(DEPTH_CLIP_CONTROL | DEPTH32FLOAT_STENCIL8 | TEXTURE_COMPRESSION_BC | TEXTURE_COMPRESSION_BC_SLICED_3D | TIMESTAMP_QUERY | INDIRECT_FIRST_INSTANCE | RG11B10UFLOAT_RENDERABLE | BGRA8UNORM_STORAGE | FLOAT32_FILTERABLE | DUAL_SOURCE_BLENDING) } }) } => AdapterInfo { name: "NVIDIA GeForce RTX 3070 Ti Laptop GPU", vendor: 4318, device: 9376, device_type: DiscreteGpu, driver: "NVIDIA", driver_info: "566.36", backend: Vulkan }
+INFO - Load autotune cache ...
+INFO - Loaded 14 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 47 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 11 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 20 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 2 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 101 autotune cached entries
+INFO - Load autotune cache ...
+INFO - Loaded 4 autotune cached entries
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.15662123, cy0.05402292, square_rel_size-0.09774843, shapeShape { dims: [3, 1592, 1448] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.025699776, cy0.048076674, square_rel_size-0.09967146, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.09458949, cy0.10951467, square_rel_size-0.1759361, shapeShape { dims: [3, 1534, 1063] }
+INFO - Still here
+INFO - It happened: 
+cx0.14385875, cy0.06442323, square_rel_size-0.13017672, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx0.14781073, cy0.062893994, square_rel_size-0.122362696, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx0.14519209, cy0.06357903, square_rel_size-0.12489525, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx0.10927272, cy0.0634082, square_rel_size-0.15102583, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx0.10141604, cy0.064227805, square_rel_size-0.15530539, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx0.09651236, cy0.06293317, square_rel_size-0.15202013, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx0.10269767, cy0.06299518, square_rel_size-0.152181, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.057336003, cy-0.061759803, square_rel_size-0.011399527, shapeShape { dims: [3, 1727, 1442] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.075410895, cy-0.021707397, square_rel_size-0.094392754, shapeShape { dims: [3, 1677, 1611] }
+INFO - Still here
+INFO - It happened: 
+cx0.0700491, cy-0.021936622, square_rel_size-0.09128479, shapeShape { dims: [3, 1677, 1611] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.25494272, cy0.003405041, square_rel_size-0.23731178, shapeShape { dims: [3, 1648, 1400] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.06877306, cy0.04796102, square_rel_size-0.20819518, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - It happened: 
+cx-0.09997599, cy0.08439629, square_rel_size-0.079084635, shapeShape { dims: [3, 1560, 1668] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.08671719, cy-0.11649363, square_rel_size-0.05186478, shapeShape { dims: [3, 1800, 1779] }
+INFO - Still here
+INFO - It happened: 
+cx-0.06568137, cy-0.115330055, square_rel_size-0.07927357, shapeShape { dims: [3, 1800, 1593] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.14125974, cy-0.06076349, square_rel_size-0.12878895, shapeShape { dims: [3, 1727, 1442] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.08493605, cy-0.050483596, square_rel_size0.0030044205, shapeShape { dims: [3, 1712, 1392] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.007264383, cy0.004287759, square_rel_size-0.15738899, shapeShape { dims: [3, 1647, 1314] }
+INFO - Still here
+INFO - It happened: 
+cx0.026251104, cy0.00453262, square_rel_size-0.16165116, shapeShape { dims: [3, 1647, 1314] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.16865546, cy0.053171933, square_rel_size0.037289843, shapeShape { dims: [3, 1592, 1144] }
+INFO - Still here
+INFO - It happened: 
+cx0.032001816, cy0.047409754, square_rel_size0.029085167, shapeShape { dims: [3, 1598, 1550] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.019829988, cy-0.021424439, square_rel_size-0.13563876, shapeShape { dims: [3, 1677, 1611] }
+INFO - Still here
+INFO - It happened: 
+cx-0.03260327, cy-0.020919591, square_rel_size-0.15674016, shapeShape { dims: [3, 1677, 1611] }
+INFO - Still here
+INFO - It happened: 
+cx-0.040208083, cy-0.021418221, square_rel_size-0.13763827, shapeShape { dims: [3, 1677, 1611] }
+INFO - Still here
+INFO - It happened: 
+cx0.11911893, cy0.08428317, square_rel_size-0.2594218, shapeShape { dims: [3, 1558, 1218] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.014952484, cy-0.036476, square_rel_size-0.04778695, shapeShape { dims: [3, 1695, 1570] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.17860965, cy0.2447538, square_rel_size0.21318144, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.024441738, cy0.0845561, square_rel_size-0.21353924, shapeShape { dims: [3, 1558, 1218] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.605811, cy0.06452443, square_rel_size-0.043597475, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx-0.5988018, cy0.06422049, square_rel_size-0.06118645, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.1377067, cy0.014836218, square_rel_size0.13899812, shapeShape { dims: [3, 1708, 1710] }
+INFO - Still here
+INFO - It happened: 
+cx-0.54137886, cy-0.06183977, square_rel_size-0.1696698, shapeShape { dims: [3, 1727, 1442] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.17849252, cy0.025355125, square_rel_size-0.153409, shapeShape { dims: [3, 1624, 1288] }
+INFO - Still here
+INFO - It happened: 
+cx-0.04652786, cy0.08430147, square_rel_size-0.2117815, shapeShape { dims: [3, 1558, 1218] }
+INFO - Still here
+INFO - It happened: 
+cx-0.055297222, cy0.0855172, square_rel_size-0.21052581, shapeShape { dims: [3, 1558, 1218] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.047662646, cy0.046184972, square_rel_size-0.19115785, shapeShape { dims: [3, 1600, 1264] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.079267055, cy-0.27410313, square_rel_size-0.3037456, shapeShape { dims: [3, 2040, 1619] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.11607313, cy0.0465026, square_rel_size-0.12490779, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.05426718, cy-0.25764015, square_rel_size-0.27435023, shapeShape { dims: [3, 2010, 1705] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.524301, cy0.0142699, square_rel_size0.25788662, shapeShape { dims: [3, 1980, 2004] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.25940967, cy0.047234964, square_rel_size-0.12288544, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - It happened: 
+cx-0.32923445, cy0.048107732, square_rel_size-0.10375131, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.04389758, cy-0.07070902, square_rel_size-0.36084467, shapeShape { dims: [3, 1741, 1504] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.32314047, cy0.06254001, square_rel_size0.15368631, shapeShape { dims: [3, 1677, 1611] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.09648533, cy-0.035741396, square_rel_size0.039006166, shapeShape { dims: [3, 1695, 1570] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.2714062, cy0.06357852, square_rel_size-0.104383245, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.02086182, cy0.052985884, square_rel_size0.04919102, shapeShape { dims: [3, 1592, 1144] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.40029776, cy0.32419086, square_rel_size-0.18448064, shapeShape { dims: [3, 1352, 1064] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.13473384, cy0.048124366, square_rel_size0.06518304, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.23500422, cy0.26114196, square_rel_size-0.04789582, shapeShape { dims: [3, 1401, 1402] }
+INFO - Still here
+INFO - It happened: 
+cx-0.24547285, cy0.26081702, square_rel_size-0.05538955, shapeShape { dims: [3, 1401, 1402] }
+INFO - Still here
+INFO - It happened: 
+cx-0.42580044, cy-0.11482568, square_rel_size-0.06511246, shapeShape { dims: [3, 1800, 1779] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.27575788, cy0.047134966, square_rel_size-0.04953312, shapeShape { dims: [3, 1600, 992] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.09832494, cy-0.21996872, square_rel_size-0.33373263, shapeShape { dims: [3, 1952, 1600] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.03375196, cy0.024899717, square_rel_size-0.3476858, shapeShape { dims: [3, 1624, 1288] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.2142339, cy-0.33582306, square_rel_size-0.5699827, shapeShape { dims: [3, 2144, 1916] }
+INFO - Still here
+INFO - It happened: 
+cx0.007081084, cy0.0853686, square_rel_size-0.31217492, shapeShape { dims: [3, 1558, 1218] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.19446422, cy0.2616932, square_rel_size-0.23146448, shapeShape { dims: [3, 1400, 1048] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.0064127985, cy0.05130554, square_rel_size-0.0919197, shapeShape { dims: [3, 1594, 1600] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.0014582817, cy0.13181919, square_rel_size0.06280525, shapeShape { dims: [3, 1512, 991] }
+INFO - Still here
+INFO - It happened: 
+cx-0.10836151, cy-0.061848868, square_rel_size-0.012365842, shapeShape { dims: [3, 1727, 1442] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.08650738, cy-0.07211976, square_rel_size-0.21605632, shapeShape { dims: [3, 1741, 1504] }
+INFO - Still here
+INFO - It happened: 
+cx-0.20665428, cy-0.09654254, square_rel_size-0.059925146, shapeShape { dims: [3, 1772, 1800] }
+INFO - Still here
+INFO - It happened: 
+cx-0.27728584, cy-0.09563056, square_rel_size-0.11717574, shapeShape { dims: [3, 1772, 1800] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.2600309, cy-0.061176892, square_rel_size0.004326349, shapeShape { dims: [3, 1727, 1442] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.17846484, cy-0.23752138, square_rel_size-0.12144993, shapeShape { dims: [3, 1980, 2004] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.24164343, cy-0.1202842, square_rel_size-0.21457928, shapeShape { dims: [3, 1806, 1375] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.010978591, cy0.085703045, square_rel_size-0.16982144, shapeShape { dims: [3, 1558, 1218] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.037146095, cy-0.035452284, square_rel_size-0.023758946, shapeShape { dims: [3, 1695, 1570] }
+INFO - Still here
+INFO - It happened: 
+cx-0.46002087, cy-0.049703278, square_rel_size-0.3083186, shapeShape { dims: [3, 1712, 1392] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.034864657, cy0.016616168, square_rel_size-0.26407975, shapeShape { dims: [3, 1632, 1312] }
+INFO - Still here
+INFO - It happened: 
+cx-0.055683013, cy0.11588299, square_rel_size-0.42776573, shapeShape { dims: [3, 1528, 968] }
+INFO - Still here
+INFO - It happened: 
+cx-0.03587609, cy0.11464824, square_rel_size-0.44329038, shapeShape { dims: [3, 1528, 968] }
+INFO - Still here
+INFO - It happened: 
+cx-0.026789084, cy0.11497684, square_rel_size-0.45776632, shapeShape { dims: [3, 1528, 968] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.47436976, cy0.064381056, square_rel_size0.09563489, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx-0.4834181, cy0.08355962, square_rel_size0.11316068, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - It happened: 
+cx-0.48128498, cy0.08596954, square_rel_size0.11415053, shapeShape { dims: [3, 1582, 1333] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.16536868, cy-0.046212774, square_rel_size-0.14270097, shapeShape { dims: [3, 1708, 1710] }
+INFO - Still here
+INFO - It happened: 
+cx-0.15510307, cy-0.045395546, square_rel_size-0.13139646, shapeShape { dims: [3, 1708, 1710] }
+INFO - Still here
+INFO - It happened: 
+cx-0.11919877, cy-0.21840888, square_rel_size-0.49036106, shapeShape { dims: [3, 1949, 1632] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - File exists, replacing
+INFO - It happened: 
+cx-0.40707856, cy0.08424272, square_rel_size-0.12445673, shapeShape { dims: [3, 1560, 1668] }
+INFO - Still here
+INFO - It happened: 
+cx-0.3876235, cy0.08395569, square_rel_size-0.14313279, shapeShape { dims: [3, 1560, 1668] }
+INFO - Still here
+INFO - It happened: 
+cx0.26860353, cy0.11624035, square_rel_size-0.093959644, shapeShape { dims: [3, 1528, 968] }
+INFO - Still here
+INFO - File exists, replacing
+INFO - It happened: 
+cx0.05556038, cy0.22028424, square_rel_size-0.25681472, shapeShape { dims: [3, 1432, 976] }
+INFO - Still here
+INFO - File exists, replacing

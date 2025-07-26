@@ -44,9 +44,9 @@ pub struct VisionModelConfig {
     pool_out: [usize; 2],
     #[config(default = "0.1")]
     dropout: f64,
-    #[config(default = "5e-5")]
+    #[config(default = "2e-5")]
     class_lr: f64,
-    #[config(default = "7e-5")]
+    #[config(default = "4e-5")]
     pos_lr: f64,
 }
 

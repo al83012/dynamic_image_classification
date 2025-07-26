@@ -8,3 +8,5 @@ burn = { version = "~0.17", features = ["train", "wgpu", "vision", "tui", "metri
 image = "*"
 rand = "*"
 burn-train = "*"
+log = "*"
+log4rs = "*"
