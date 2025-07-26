@@ -26,8 +26,9 @@ use nn::{
 };
 
 use crate::{
-    data::ClassificationItem,
+    data::{ClassificationItem, DataLoader},
     image::{extract_section, load_image},
+    metrics::AvgMetric,
     model::{PositioningData, VisionModel, VisionModelStepInput},
 };
 
@@ -42,6 +43,7 @@ pub struct StepStatistics {
     pub last_loss: f32,
     pub avg_loss: f32,
     pub finished_after: usize,
+    pub correct: bool,
 }
 
 pub fn train<B: AutodiffBackend>(
@@ -63,13 +65,15 @@ pub fn train<B: AutodiffBackend>(
     // let class_oh_target_int: Tensor<B, 1, Int> = idx_tensor.one_hot(model.num_classes);
     // let class_oh_target: Tensor<B, 3> = class_oh_target_int.float().unsqueeze_dims(&[0, 0]);
     // let class_oh_target_vec: Vec<f32> = class_oh_target.to_data().to_vec().unwrap();
+
+    let mut class_oh_vec = vec![0.0; model.num_classes];
+    class_oh_vec[target] = 1.0;
     let class_oh_target: Tensor<B, 3> =
-        Tensor::<B, 1>::from_data(if target == 0 { [1.0, 0.0] } else { [0.0, 1.0] }, device)
-            .unsqueeze_dims(&[0, 1]);
+        Tensor::<B, 1>::from_data(class_oh_vec.as_slice(), device).unsqueeze_dims(&[0, 1]);
 
     // println!("Extracted class data");
 
-    let pos_data = PositioningData::<B>::start(device);
+    let mut pos_data = PositioningData::<B>::start(device);
     let mut lstm_state: Option<LstmState<B, 2>> = None;
 
     let mut pos_out_dummy_diff_acc: Tensor<B, 1> = Tensor::from_data([0.0], device);
@@ -85,6 +89,8 @@ pub fn train<B: AutodiffBackend>(
     let mut last_loss = 0.0;
 
     let mut aggregate_loss = 0.0;
+
+    let mut avg_norm_quality = 0.0;
 
     // println!("Setup for iteration");
 
@@ -108,8 +114,14 @@ pub fn train<B: AutodiffBackend>(
         let class_out = step_out.current_classification;
         let pos_out = step_out.next_pos.0;
 
-        let (highest_class, certainty) =
-            tensor_argmax(class_out.clone().detach().squeeze_dims(&[0, 1]));
+        pos_data = PositioningData(pos_out.clone().detach());
+
+        let norm_quality = pos_data.norm_quality().atan().clamp(0.0, 1.0) * 1.2;
+
+        avg_norm_quality += norm_quality;
+
+
+        let squeezed_class = class_out.clone().detach().squeeze_dims(&[0, 1]);
 
         let output_vec: Vec<f32> = class_out
             .clone()
@@ -118,16 +130,14 @@ pub fn train<B: AutodiffBackend>(
             .to_data()
             .to_vec()
             .expect("Error unwrapping output");
-        assert_eq!(output_vec.len(), 2);
+        // assert_eq!(output_vec.len(), 2);
 
-        let min = output_vec[0].min(output_vec[1]);
-        let max = output_vec[0].max(output_vec[1]);
-
-        let can_finish = min < 0.5 && max >= 0.5;
+        let concentration = concentration(squeezed_class.clone());
+        let can_finish = concentration > 0.5;
 
         // println!("After argmax");
 
-        let class_loss = mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Mean);
+        let class_loss = mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Auto);
         let class_loss_single: f32 = class_loss.clone().detach().into_data().to_vec().unwrap()[0];
 
         aggregate_loss += class_loss_single;
@@ -142,14 +152,9 @@ pub fn train<B: AutodiffBackend>(
 
         model = class_optim.step(model.class_lr, model, class_grad_params);
 
-        if min < 0.0 || max > 1.0 {
-            acc_reward -= 0.5;
-        }
-
         if can_finish {
-            if highest_class == target {
-                correct_output = true;
-            }
+            let (highest_class, _) = tensor_argmax(squeezed_class);
+            correct_output = highest_class == target;
             last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
             acc_reward -= class_loss_single;
             break;
@@ -158,12 +163,14 @@ pub fn train<B: AutodiffBackend>(
         acc_reward += class_loss_single;
     }
 
+    avg_norm_quality /= (current_iter + 1) as f32;
+
     aggregate_loss /= (current_iter + 1) as f32;
 
-    acc_reward += if correct_output { 10.0 } else { -5.0 };
+    acc_reward += if correct_output { 4.0 } else { -3.0 };
 
     if last_loss > aggregate_loss {
-        acc_reward += (last_loss - aggregate_loss) * 5.0 + 1.0;
+        acc_reward += (last_loss - aggregate_loss) * 10.0 + 1.5;
     }
 
     let time_needed = (current_iter + 1) as f32 / max_iter_count as f32;
@@ -177,10 +184,13 @@ pub fn train<B: AutodiffBackend>(
     // } else {
     //     time_needed
     // };
-    let time_goal = (1.0 - time_needed.sqrt());
+
+    // let total_reward = acc_reward * time_goal - last_loss * 10.0 * (1.0 - time_goal) - aggregate_loss * 5.0 * (1.0 - time_goal) + 3.0;
+    let total_loss = (last_loss - aggregate_loss) * 2.0 + time_needed * 0.1 + avg_norm_quality * 0.01;
+
 
     let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-    let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(acc_reward * time_goal);
+    let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
     let pos_dummy_grad = pos_dummy_loss.backward();
     let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
 
@@ -189,10 +199,11 @@ pub fn train<B: AutodiffBackend>(
     (
         model,
         StepStatistics {
-            reward: acc_reward * time_goal,
+            reward: -total_loss,
             last_loss,
             avg_loss: aggregate_loss,
             finished_after: current_iter + 1,
+            correct: correct_output,
         },
     )
 }
@@ -210,104 +221,101 @@ pub fn train_all<B: AutodiffBackend>(
     mut model: VisionModel<B>,
     device: &B::Device,
     optim_data: &mut OptimizerData<B>,
+    mut data_loader: impl DataLoader<B>,
     epochs: usize,
 ) -> VisionModel<B> {
     let train_interrupter = TrainingInterrupter::new();
-    let mut train_iter_metric = MetricState::Numeric(
-        MetricEntry {
-            name: "Iteration Number".to_string(),
-            formatted: "Iter Num".to_string(),
-            serialize: "itr_num".to_string(),
-        },
-        0.0,
-    );
     let mut renderer = TuiMetricsRenderer::new(train_interrupter, None);
+
+    let mut window_avg_loss_metric =
+        AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 100);
+
+    let mut window_correct_metric = AvgMetric::new(
+        "W Correct guess".to_owned(),
+        "w_correct_guess".to_owned(),
+        100,
+    );
+
     // println!("loading training folder");
-    let training_folder =
-        fs::read_dir("./data/archive/Training/Training").expect("Unable to open Training Data");
-    let mut entries = training_folder.into_iter().collect::<Vec<_>>();
-    let mut rng = rand::thread_rng();
 
-    let total_entries = entries.len();
-    let mut processed = 0;
-
-    entries.shuffle(&mut rng);
+    let mut total_step_id = 0;
 
     for epoch in 0..epochs {
         // println!("processing entries");
-        for chunk in entries.chunks(50) {
-            for entry in chunk {
-                processed += 1;
+        for i in 0..data_loader.len() {
+            let training_input = data_loader.next(device);
 
-                let entry = entry.as_ref().expect("Unable to read dir entry");
-                let file_name = entry.file_name().to_string_lossy().to_string();
-                // println!("Loading {file_name}");
-                let class = if file_name.starts_with("not") { 0 } else { 1 };
+            // println!("Loading {file_name}");
 
-                let image = load_image::<B>(&format!("Training/Training/{file_name}"), device);
+            let (model_out, stats) = train(training_input, model, device, 100, optim_data);
+            model = model_out;
 
-                let training_input = ClassificationItem {
-                    image,
-                    classification: class,
-                };
+            let new_iter_metric = MetricState::Numeric(
+                MetricEntry {
+                    name: "Iteration Number".to_string(),
+                    formatted: "Iter Num".to_string(),
+                    serialize: "itr_num".to_string(),
+                },
+                stats.finished_after as f64,
+            );
 
-                let (model_out, stats) = train(training_input, model, device, 30, optim_data);
-                model = model_out;
+            let new_reward_metric = MetricState::Numeric(
+                MetricEntry {
+                    name: "Reward".to_string(),
+                    formatted: "Reward".to_string(),
+                    serialize: "reward".to_string(),
+                },
+                stats.reward as f64,
+            );
 
-                let new_iter_metric = MetricState::Numeric(
-                    MetricEntry {
-                        name: "Iteration Number".to_string(),
-                        formatted: "Iter Num".to_string(),
-                        serialize: "itr_num".to_string(),
-                    },
-                    stats.finished_after as f64,
-                );
+            let new_last_loss_metric = MetricState::Numeric(
+                MetricEntry {
+                    name: "Last Loss".to_string(),
+                    formatted: "Last Loss".to_string(),
+                    serialize: "last_loss".to_string(),
+                },
+                stats.last_loss as f64,
+            );
 
-                let new_reward_metric = MetricState::Numeric(
-                    MetricEntry {
-                        name: "Reward".to_string(),
-                        formatted: "Reward".to_string(),
-                        serialize: "reward".to_string(),
-                    },
-                    stats.reward as f64,
-                );
+            let new_avg_loss_metric = MetricState::Numeric(
+                MetricEntry {
+                    name: "Avg Loss".to_string(),
+                    formatted: "Avg Loss".to_string(),
+                    serialize: "avg_loss".to_string(),
+                },
+                stats.avg_loss as f64,
+            );
 
-                let new_last_loss_metric = MetricState::Numeric(
-                    MetricEntry {
-                        name: "Last Loss".to_string(),
-                        formatted: "Last Loss".to_string(),
-                        serialize: "last_loss".to_string(),
-                    },
-                    stats.last_loss as f64,
-                );
+            let new_window_avg_loss_metric = window_avg_loss_metric.update(stats.avg_loss as f64);
+            let new_window_correct_guess_metric =
+                window_correct_metric.update_saturating(if stats.correct { 100.0 } else { 0.0 });
 
-                let new_avg_loss_metric = MetricState::Numeric(
-                    MetricEntry {
-                        name: "Avg Loss".to_string(),
-                        formatted: "Avg Loss".to_string(),
-                        serialize: "avg_loss".to_string(),
-                    },
-                    stats.avg_loss as f64,
-                );
-                renderer.update_train(new_iter_metric);
-                renderer.update_train(new_reward_metric);
-                renderer.update_train(new_last_loss_metric);
-                renderer.update_train(new_avg_loss_metric);
-                let training_progress = TrainingProgress {
-                    progress: Progress::new(processed, total_entries),
-                    epoch: epoch + 1,
-                    epoch_total: epochs,
-                    iteration: 1,
-                };
-                renderer.render_train(training_progress);
+            renderer.update_train(new_iter_metric);
+            renderer.update_train(new_reward_metric);
+            renderer.update_train(new_last_loss_metric);
+            renderer.update_train(new_avg_loss_metric);
+            renderer.update_train(new_window_avg_loss_metric);
 
-                // println!("{stats:#?}");
+            if let Some(w_correct) = new_window_correct_guess_metric {
+                renderer.update_train(w_correct);
             }
 
-            create_artifact_dir("model_artifacts");
-            model
-                .clone()
-                .save_file("model_artifacts", &CompactRecorder::new());
+            let training_progress = TrainingProgress {
+                progress: Progress::new(data_loader.current_id(), data_loader.len()),
+                epoch: epoch + 1,
+                epoch_total: epochs,
+                iteration: 1,
+            };
+            renderer.render_train(training_progress);
+
+            // println!("{stats:#?}");
+
+            if i % 50 == 0 {
+                create_artifact_dir("model_artifacts");
+                model
+                    .clone()
+                    .save_file("model_artifacts", &CompactRecorder::new());
+            }
         }
     }
 
@@ -318,4 +326,10 @@ fn create_artifact_dir(artifact_dir: &str) {
     // Remove existing artifacts before to get an accurate learner summary
     std::fs::remove_dir_all(artifact_dir).ok();
     std::fs::create_dir_all(artifact_dir).ok();
+}
+
+fn concentration<B: Backend>(tensor: Tensor<B, 1>) -> f32 {
+    let soft = burn::tensor::activation::softmax(tensor, 0);
+    let (_, highest) = tensor_argmax(soft);
+    highest
 }

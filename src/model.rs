@@ -40,13 +40,13 @@ pub struct VisionModelConfig {
     conv_1_kernel_count: usize,
     #[config(default = "8")]
     conv_2_kernel_count: usize,
-    #[config(default = "[6, 6]")]
+    #[config(default = "[10, 10]")]
     pool_out: [usize; 2],
-    #[config(default = "0.4")]
+    #[config(default = "0.1")]
     dropout: f64,
-    #[config(default = "1e-3")]
+    #[config(default = "5e-5")]
     class_lr: f64,
-    #[config(default = "5e-3")]
+    #[config(default = "7e-5")]
     pos_lr: f64,
 }
 
@@ -169,7 +169,7 @@ impl<B: Backend> PositioningData<B> {
         )
     }
     pub fn start(device: &B::Device) -> Self {
-        Self::from_params([0.5, 0.5], 1.0, device)
+        Self::from_params([0.0, 0.0], 1.0, device)
     }
     pub fn get_params_detach(&self) -> ([f32; 2], f32) {
         let data = self.0.clone().detach().to_data();
@@ -178,5 +178,13 @@ impl<B: Backend> PositioningData<B> {
             .expect("PositioningData should be able to be converted to Vec");
         assert!(vec.len() == 3);
         ([vec[0], vec[1]], vec[2])
+    }
+
+    pub fn norm_quality(&self) -> f32 {
+        let ([cx, cy], size) = self.get_params_detach();
+        let cx_norm = (cx.abs() - 2.0).max(0.0);
+        let cy_norm = (cy.abs() - 2.0).max(0.0);
+        let size_norm = (size.abs() - 1.0).max(0.0) + if size.is_sign_negative() {1.0} else {0.0};
+        cx_norm + cy_norm + size_norm
     }
 }

@@ -4,7 +4,7 @@ use nn::pool::AdaptiveAvgPool2d;
 use crate::data::ClassificationBatch;
 
 // Tensor[channels, x, y]
-pub const IMAGE_FOLDER: &str = "data/archive/";
+pub const IMAGE_FOLDER: &str = "data";
 pub fn load_image<B: Backend>(name: &str, device: &B::Device) -> Tensor<B, 3> {
     let img = image::open(format!("{IMAGE_FOLDER}/{name}"))
         .expect("Error loading image")
@@ -28,20 +28,29 @@ pub fn extract_section<B: Backend>(
     square_rel_size: f32,
 ) -> Tensor<B, 3> {
     let [c, h, w] = image.dims();
-    let px = (cx.clamp(0.0, 1.0) * w as f32).round() as usize;
-    let py = (cy.clamp(0.0, 1.0) * h as f32).round() as usize;
 
-    let half_section_width: usize =
-        (square_rel_size.clamp(0.1, 1.0) / 2.0 * w as f32).round() as usize;
-    let half_section_height: usize =
-        (square_rel_size.clamp(0.1, 1.0) / 2.0 * h as f32).round() as usize;
+    let reshaped_cx = cx.atan() / (std::f32::consts::PI / 2.0) * 0.5;
+    let reshaped_cy = cy.atan() / (std::f32::consts::PI / 2.0) * 0.5;
 
-    let x0 = px.saturating_sub(half_section_width);
-    let y0 = py.saturating_sub(half_section_height);
+    let px = ((reshaped_cx.clamp(-0.5, 0.5) + 0.5) * w as f32).round() as usize;
+    let py = ((reshaped_cy.clamp(-0.5, 0.5) + 0.5) * h as f32).round() as usize;
 
-    let x1 = px + half_section_width.clamp(0, w - 1);
-    let y1 = (px + half_section_height).clamp(0, h - 1);
+    let clamped_size = square_rel_size.clamp(0.1, 0.9);
+
+    let section_width = (w as f32 * clamped_size) as usize;
+    let section_height = (h as f32 * clamped_size) as usize;
+
+    let desired_x0 = px.saturating_sub(section_width / 2);
+    let desired_y0 = py.saturating_sub(section_height / 2);
+
+    let desired_x1 = (desired_x0 + section_width).min(w - 2);
+    let desired_y1 = (desired_y0 + section_height).min(h - 2);
+
+    let desired_x0 = (desired_x1 - section_width).saturating_sub(1);
+    let desired_y0 = (desired_y1 - section_height).saturating_sub(1);
+
+
 
     //slice all three channels and the block of x and y coords
-    image.slice([0..3, x0..x1, y0..y1])
+    image.slice([0..3, desired_x0..desired_x1, desired_y0..desired_y1])
 }
