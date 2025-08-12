@@ -18,7 +18,7 @@ use log4rs::{
     Config,
 };
 use model::{VisionModelConfig, VisionModelRecord};
-use save::load_from_highest;
+use save::{load_from_highest, save_to_new_highest};
 use train::{TrainingConfig, TrainingManager};
 
 pub mod class;
@@ -62,7 +62,8 @@ fn main() {
     let training_config = TrainingConfig::new(model_name.to_string());
 
     let model = VisionModelConfig::new(3).init(&device)/* .load_record(record) */;
-    let model = load_from_highest(&model_name, model, &device);
+    let model = load_from_highest(model_name, model, &device);
+    save_to_new_highest(model_name, &model);
 
     let mut training_manager = TrainingManager::<MyAutodiffBackend>::init(training_config, device);
 

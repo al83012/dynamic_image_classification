@@ -47,10 +47,12 @@ pub struct TrainingConfig {
     iter_improvement_weight: f32,
     #[config(default = "0.1")]
     iter_time_weight: f32,
-    #[config(default = "8e-6")]
+    #[config(default = "1.5e-5")]
     class_lr: f64,
     #[config(default = "5e-5")]
     pos_lr: f64,
+    #[config(default = "0.4")]
+    lr_min_decayed_portion: f64,
 }
 
 pub struct TrainingManager<B: AutodiffBackend> {
@@ -78,6 +80,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         model: VisionModel<B>,
         t: f32,
     ) -> (VisionModel<B>, StepStatistics) {
+        let lr_portion = ((1.0 - t) + self.config.lr_min_decayed_portion as f32 * t) as f64;
+        let adj_class_lr = lr_portion * self.config.class_lr;
+        let adj_pos_lr = lr_portion * self.config.pos_lr;
         let mut model = model;
 
         let class_optim = &mut self.optimizers.class_optim;
@@ -118,7 +123,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut avg_norm_quality = 0.0;
 
-        // let mut class_grad_accum = GradientsAccumulator::new();
+        let mut class_grad_accum = GradientsAccumulator::new();
 
         // println!("Setup for iteration");
         // log::info!("Setup for iteration");
@@ -170,7 +175,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             // assert_eq!(output_vec.len(), 2);
 
             let concentration = concentration(squeezed_class.clone());
-            let concentration_limit = 0.4 * (1.0 - t) + 0.6 * (t);
+            let concentration_limit = self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
             let can_finish = concentration > concentration_limit && i >= 1;
 
             // log::info!("After concentration calc");
@@ -187,9 +192,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             let class_grad = class_loss.backward();
             let class_grad_params = GradientsParams::from_grads(class_grad, &model);
-            // class_grad_accum.accumulate(&model, class_grad_params);
+            class_grad_accum.accumulate(&model, class_grad_params);
 
-            model = class_optim.step(self.config.class_lr, model, class_grad_params);
+            if i % 5 == 0 {
+                model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+            }
+
 
             // log::info!("did loss and gradients");
 
@@ -208,7 +216,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             acc_reward += class_loss_single;
         }
 
-        // model = class_optim.step(self.config.class_lr, model, class_grad_accum.grads());
+        model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
         // log::info!("Passed iterations");
 
         avg_norm_quality /= (current_iter + 1) as f32;
@@ -242,7 +250,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let pos_dummy_grad = pos_dummy_loss.backward();
         let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
 
-        model = pos_optim.step(self.config.pos_lr, model, pos_dummy_grad_params);
+        model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
 
         // log::info!("Did full train for image");
         (
