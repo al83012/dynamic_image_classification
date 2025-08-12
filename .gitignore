@@ -1,1 +1,7 @@
-/target
+target/
+log/
+model_artifacts/
+*.log
+*.mpk
+
+

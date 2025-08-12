@@ -18,17 +18,13 @@ pub struct VisionModel<B: Backend> {
     linear_pos: Linear<B>,
     linear_class: Linear<B>,
     activation: Relu,
-    pub class_lr: f64,
-    pub pos_lr: f64,
     pub num_classes: usize,
 }
 
 #[derive(Config)]
 pub struct VisionModelConfig {
     num_classes: usize,
-    #[config(default = "128")]
-    lstm_output_size: usize,
-    #[config(default = "128")]
+    #[config(default = "256")]
     lstm_hidden_size: usize,
     #[config(default = "[3, 3]")]
     conv_1_kernel: [usize; 2],
@@ -38,16 +34,12 @@ pub struct VisionModelConfig {
     color_channels: usize,
     #[config(default = "8")]
     conv_1_kernel_count: usize,
-    #[config(default = "8")]
+    #[config(default = "16")]
     conv_2_kernel_count: usize,
     #[config(default = "[10, 10]")]
     pool_out: [usize; 2],
-    #[config(default = "0.1")]
+    #[config(default = "0.2")]
     dropout: f64,
-    #[config(default = "2e-5")]
-    class_lr: f64,
-    #[config(default = "4e-5")]
-    pos_lr: f64,
 }
 
 impl VisionModelConfig {
@@ -55,7 +47,7 @@ impl VisionModelConfig {
         let positioning_data_size = PositioningData::<B>::SIZE;
         let conv_1_out_channel = self.color_channels * self.conv_1_kernel_count;
         let conv_2_out_channel = conv_1_out_channel * self.conv_2_kernel_count;
-        
+
         let conv_1_out_img_dim = [self.pool_out[0] - 2, self.pool_out[1] - 2];
         let conv_2_out_img_dim = [conv_1_out_img_dim[0] - 2, conv_1_out_img_dim[1] - 2];
 
@@ -81,11 +73,9 @@ impl VisionModelConfig {
             lstm: LstmConfig::new(lstm_input_size, self.lstm_hidden_size, false).init(device),
             linear_pos: LinearConfig::new(self.lstm_hidden_size, positioning_data_size)
                 .init(device),
-            linear_class: LinearConfig::new(self.lstm_output_size, self.num_classes).init(device),
+            linear_class: LinearConfig::new(self.lstm_hidden_size, self.num_classes).init(device),
             activation: Relu::new(),
             num_classes: self.num_classes,
-            class_lr: self.class_lr,
-            pos_lr: self.pos_lr,
         }
     }
 }
@@ -184,7 +174,8 @@ impl<B: Backend> PositioningData<B> {
         let ([cx, cy], size) = self.get_params_detach();
         let cx_norm = (cx.abs() - 2.0).max(0.0);
         let cy_norm = (cy.abs() - 2.0).max(0.0);
-        let size_norm = (size.abs() - 1.0).max(0.0) + if size.is_sign_negative() {1.0} else {0.0};
+        let size_norm =
+            (size.abs() - 1.0).max(0.0) + if size.is_sign_negative() { 1.0 } else { 0.0 };
         cx_norm + cy_norm + size_norm
     }
 }

@@ -28,7 +28,7 @@ pub fn extract_section<B: Backend>(
     cy: f32,
     square_rel_size: f32,
 ) -> Tensor<B, 3> {
-    let [c, h, w] = image.dims();
+    let [c, w, h] = image.dims();
 
     let reshaped_cx = cx.atan() / (std::f32::consts::PI / 2.0) * 0.5;
     let reshaped_cy = cy.atan() / (std::f32::consts::PI / 2.0) * 0.5;
@@ -51,7 +51,7 @@ pub fn extract_section<B: Backend>(
         (px - section_width / 2, px + section_width / 2)
     };
 
-    log::info!("py = {py}, section_height = {section_height}, height = {h}");
+    // log::info!("py = {py}, section_height = {section_height}, height = {h}");
 
     let (y0, y1) = if py < section_height / 2 {
         // Ends in the negative
@@ -60,22 +60,22 @@ pub fn extract_section<B: Backend>(
     } else if py + section_height / 2 > h - 1 {
         // Out of bounds
         
-        log::info!("Pos out of bounds");
+        // log::info!("Pos out of bounds");
         (h - 1 - section_height, h - 1)
 
     } else {
 
-        log::info!("Valid");
+        // log::info!("Valid");
         (py - section_height / 2, py + section_height / 2)
     };
 
-    log::info!("SHAPE: {:?}", image.shape());
+    // log::info!("SHAPE: {:?}", image.shape());
 
-    log::info!("[{x0}..{x1}, {y0}..{y1}]");
+    // log::info!("[{x0}..{x1}, {y0}..{y1}]");
 
     let slice = image.slice([0..3, x0..x1, y0..y1]);
 
-    log::info!("Made it");
+    // log::info!("Made it");
 
     slice
 }
