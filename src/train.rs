@@ -24,7 +24,8 @@ pub struct StepStatistics {
     pub last_loss: f32,
     pub avg_loss: f32,
     pub finished_after: usize,
-    pub correct: bool,
+    pub target: usize,
+    pub last_out: usize,
 }
 
 pub struct OptimizerData<B: AutodiffBackend> {
@@ -115,7 +116,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut current_iter = 0;
 
-        let mut correct_output = false;
+        let mut last_guess = 0;
 
         let mut last_loss = 0.0;
 
@@ -175,7 +176,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             // assert_eq!(output_vec.len(), 2);
 
             let concentration = concentration(squeezed_class.clone());
-            let concentration_limit = self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
+            let concentration_limit =
+                self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
             let can_finish = concentration > concentration_limit && i >= 1;
 
             // log::info!("After concentration calc");
@@ -194,20 +196,19 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             let class_grad_params = GradientsParams::from_grads(class_grad, &model);
             class_grad_accum.accumulate(&model, class_grad_params);
 
-            if i % 5 == 0 {
-                model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
-            }
-
-
             // log::info!("did loss and gradients");
 
             let pos_out_dummy_diff = pos_out.mean();
             pos_out_dummy_diff_acc =
                 Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
 
-            if can_finish {
+            if i % 5 == 0 {
+                model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+            }
+
+            if can_finish || i + 1 == self.config.max_iter_count {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
-                correct_output = highest_class == target;
+                last_guess = highest_class;
                 last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
                 acc_reward -= class_loss_single;
                 break;
@@ -223,11 +224,11 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         aggregate_loss /= (current_iter + 1) as f32;
 
-        acc_reward += if correct_output { 4.0 } else { -3.0 };
+        // acc_reward += if correct_output { 4.0 } else { -3.0 };
 
-        if last_loss > aggregate_loss {
-            acc_reward += (last_loss - aggregate_loss) * 10.0 + 1.5;
-        }
+        // if last_loss > aggregate_loss {
+        //     acc_reward += (last_loss - aggregate_loss) * 10.0 + 1.5;
+        // }
 
         let time_needed = (current_iter + 1) as f32 / self.config.max_iter_count as f32;
 
@@ -260,7 +261,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 last_loss,
                 avg_loss: aggregate_loss,
                 finished_after: current_iter + 1,
-                correct: correct_output,
+                last_out: last_guess,
+                target,
             },
         )
     }
@@ -280,6 +282,24 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             "W Correct guess".to_owned(),
             "w_correct_guess".to_owned(),
             100,
+        );
+
+        let mut window_correct_covid_metric = AvgMetric::new(
+            "W Correct guess COVID".to_owned(),
+            "w_correct_guess_covid".to_owned(),
+            50,
+        );
+
+        let mut window_correct_normal_metric = AvgMetric::new(
+            "W Correct guess NORMAL".to_owned(),
+            "w_correct_guess_normal".to_owned(),
+            50,
+        );
+
+        let mut window_correct_pneumonia_metric = AvgMetric::new(
+            "W Correct guess PNEUMONIA".to_owned(),
+            "w_correct_guess_pneumonia".to_owned(),
+            50,
         );
 
         save::save_to_new_highest(&self.config.save_as, &model);
@@ -337,8 +357,46 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
                 let new_window_avg_loss_metric =
                     window_avg_loss_metric.update(stats.avg_loss as f64);
-                let new_window_correct_guess_metric = window_correct_metric
-                    .update_saturating(if stats.correct { 100.0 } else { 0.0 });
+                let new_window_correct_guess_metric =
+                    window_correct_metric.update_saturating(if stats.last_out == stats.target {
+                        100.0
+                    } else {
+                        0.0
+                    });
+
+                let next_cov_stat = if stats.target == 0 {
+                    Some(if stats.last_out == 0 { 100.0 } else { 0.0 })
+                } else {
+                    None
+                };
+                let next_norm_stat = if stats.target == 1 {
+                    Some(if stats.last_out == 1 { 100.0 } else { 0.0 })
+                } else {
+                    None
+                };
+                let next_pneum_stat = if stats.target == 2 {
+                    Some(if stats.last_out == 2 { 100.0 } else { 0.0 })
+                } else {
+                    None
+                };
+
+                if let Some(cov_m) =
+                    window_correct_covid_metric.update_saturating_or_avg(next_cov_stat)
+                {
+                    renderer.update_train(cov_m);
+                }
+
+                if let Some(norm_m) =
+                    window_correct_normal_metric.update_saturating_or_avg(next_norm_stat)
+                {
+                    renderer.update_train(norm_m);
+                }
+
+                if let Some(pneum_m) =
+                    window_correct_pneumonia_metric.update_saturating_or_avg(next_pneum_stat)
+                {
+                    renderer.update_train(pneum_m);
+                }
 
                 renderer.update_train(new_iter_metric);
                 renderer.update_train(new_reward_metric);
