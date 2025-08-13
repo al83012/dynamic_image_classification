@@ -7,6 +7,7 @@ use nn::{
     pool::{AdaptiveAvgPool2d, AdaptiveAvgPool2dConfig},
     Dropout, Linear, LinearConfig, Lstm, LstmConfig, LstmState, Relu,
 };
+use rand::Rng;
 
 #[derive(Module, Debug)]
 pub struct VisionModel<B: Backend> {
@@ -179,5 +180,13 @@ impl<B: Backend> PositioningData<B> {
         let size_norm =
             (size.abs() - 1.0).max(0.0) + if size.is_sign_negative() { 1.0 } else { 0.0 };
         cx_norm + cy_norm + size_norm
+    }
+    pub fn random(device: &B::Device) -> Self {
+        let mut rng = rand::rng();
+        let cx = rng.random_range(-1.0..1.0) * 4.0;
+        let cy = rng.random_range(-1.0..1.0) * 4.0;
+        let size = rng.random_range(0.1..0.9);
+
+        Self::from_params([cx, cy], size, device)
     }
 }

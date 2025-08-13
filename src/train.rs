@@ -44,7 +44,7 @@ pub struct TrainingConfig {
     save_as: String,
     #[config(default = "0.012")]
     norm_quality_weight: f32,
-    #[config(default = "(0.5, 0.5)")]
+    #[config(default = "(0.3, 0.7)")]
     certainty_slope: (f32, f32),
     #[config(default = "2.0")]
     iter_improvement_weight: f32,
@@ -52,7 +52,7 @@ pub struct TrainingConfig {
     iter_time_weight: f32,
     #[config(default = "1.5e-5")]
     class_lr: f64,
-    #[config(default = "1e-5")]
+    #[config(default = "2e-4")]
     pos_lr: f64,
     #[config(default = "0.4")]
     lr_min_decayed_portion: f64,
@@ -127,6 +127,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let mut avg_norm_quality = 0.0;
 
         let mut class_grad_accum = GradientsAccumulator::new();
+
+        #[cfg(not(feature = "no_pos_proc"))]
         let mut pos_grad_accum = GradientsAccumulator::new();
 
         let mut previous_loss: Tensor<B, 1> =
@@ -169,8 +171,14 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             let class_out = step_out.current_classification;
             let pos_out = step_out.next_pos.0;
-
-            pos_data = PositioningData(pos_out.clone().detach());
+            #[cfg(feature = "no_pos_proc")]
+            {
+                pos_data = PositioningData::random(&self.device);
+            }
+            #[cfg(not(feature = "no_pos_proc"))]
+            {
+                pos_data = PositioningData(pos_out.clone().detach());
+            }
 
             // log::info!("After repackaging pos data");
 
@@ -207,21 +215,25 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // println!("After loss");
 
-            let class_grad = class_loss.clone().backward();
-            let class_grad_params = GradientsParams::from_grads(class_grad, &model);
-            class_grad_accum.accumulate(&model, class_grad_params);
+            #[cfg(not(feature = "no_class_proc"))]
+            {
+                let class_grad = class_loss.clone().backward();
+                let class_grad_params = GradientsParams::from_grads(class_grad, &model);
+                class_grad_accum.accumulate(&model, class_grad_params);
+            }
 
             // log::info!("did loss and gradients");
 
-            // let pos_out_dummy_diff = pos_out.mean();
-            // pos_out_dummy_diff_acc =
-                // Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
-
+            let pos_out_dummy_diff = pos_out.clone().mean();
+            pos_out_dummy_diff_acc =
+                Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
 
             if i % 5 == 0 {
-                // model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+                #[cfg(not(feature = "no_class_proc"))]
+                {
+                    model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+                }
             }
-
 
             if i > 1 {
                 // The lower, the better the model is performing
@@ -232,16 +244,18 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 let loss_change = loss_change.to_data().to_vec::<f32>().unwrap()[0];
                 aggregate_loss_improvement -= loss_change;
 
-                let pos_grad = pos_out.mul_scalar(-loss_change).backward();
-                let pos_grad_params = GradientsParams::from_grads(pos_grad, &model);
-                pos_grad_accum.accumulate(&model, pos_grad_params);
+                // let pos_grad = pos_out.mul_scalar(-loss_change).backward();
+                // let pos_grad_params = GradientsParams::from_grads(pos_grad, &model);
+                // pos_grad_accum.accumulate(&model, pos_grad_params);
 
                 // let grads = GradientsParams::from_grads(improvement_loss.backward(), &model);
 
                 // class_improvement_grad_accum.accumulate(&model, grads);
             }
 
-            if /*(can_finish && i > 2) || */ i + 1 == self.config.max_iter_count || i >= 5 {
+            if
+            /*(can_finish && i > 2) || */
+            i + 1 == self.config.max_iter_count || i >= 5 {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
                 last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
@@ -253,7 +267,11 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         }
 
         //NOTE: This needs to be reactivated later
-        // model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+
+        #[cfg(not(feature = "no_class_proc"))]
+        {
+            model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+        }
 
         // log::info!("Passed iterations");
 
@@ -289,20 +307,26 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             + time_needed * time_needed * self.config.iter_time_weight
             + avg_norm_quality * self.config.norm_quality_weight;
 
-        // let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-        // let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
-        // let pos_dummy_grad = pos_dummy_loss.backward();
-        // let gradients = pos_grad_accum.grads();
-        
+        let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
+        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
+        let pos_dummy_grad = pos_dummy_loss.backward();
+
+
+        #[cfg(not(feature = "no_pos_proc"))]
+        let gradients = pos_grad_accum.grads();
+
         // let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
         // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params * total_loss);
 
-        model = pos_optim.step(adj_pos_lr, model, pos_grad_accum.grads());
+        // model = pos_optim.step(adj_pos_lr, model, pos_grad_accum.grads());
 
         // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
 
         //OG
-        // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
+        #[cfg(not(feature = "no_pos_proc"))]
+        {
+            model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
+        }
 
         // log::info!("Did full train for image");
         (
@@ -458,9 +482,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     renderer.update_train(pneum_m);
                 }
 
-                if let Some(improvement) = window_avg_loss_improvement.update_saturating(
-                    stats.avg_step_improvement as f64
-                ) {
+                if let Some(improvement) =
+                    window_avg_loss_improvement.update_saturating(stats.avg_step_improvement as f64)
+                {
                     renderer.update_train(improvement);
                 }
 
