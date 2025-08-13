@@ -213,7 +213,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
 
             if i % 5 == 0 {
-                model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+                // model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
             }
 
             if i % 2 == 1 {
@@ -271,7 +271,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let pos_dummy_grad = pos_dummy_loss.backward();
         let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
 
-        // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
+        model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
 
         // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
 
