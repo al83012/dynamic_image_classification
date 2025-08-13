@@ -11,7 +11,6 @@ burn-train = "*"
 log = "*"
 log4rs = "*"
 nannou = "*"
-noon = "*"
 
 [features]
 default = []

@@ -1856,7 +1856,6 @@ dependencies = [
  "log",
  "log4rs",
  "nannou",
- "noon",
  "rand 0.9.1",
 ]
 
@@ -4197,12 +4196,6 @@ dependencies = [
  "memchr",
  "minimal-lexical",
 ]
-
-[[package]]
-name = "noon"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea1de358bc8ba5f74604bb2d0e353ee30284447457e0e615651ded4b44ff4aba"
 
 [[package]]
 name = "noop_proc_macro"

@@ -1,5 +1,9 @@
 use burn::prelude::*;
 use log;
+use nannou::{
+    color::Rgb,
+    image::{DynamicImage, ImageBuffer},
+};
 use nn::pool::AdaptiveAvgPool2d;
 
 use crate::data::ClassificationBatch;
@@ -7,9 +11,12 @@ use crate::data::ClassificationBatch;
 // Tensor[channels, x, y]
 pub const IMAGE_FOLDER: &str = "data";
 pub fn load_image<B: Backend>(name: &str, device: &B::Device) -> Tensor<B, 3> {
-    let img = nannou::image::open(format!("{IMAGE_FOLDER}/{name}"))
-        .expect("Error loading image")
-        .to_rgb8();
+    let img = nannou::image::open(format!("{IMAGE_FOLDER}/{name}")).expect("Error loading image");
+    image_as_tensor(&img, device)
+}
+
+pub fn image_as_tensor<B: Backend>(image: &DynamicImage, device: &B::Device) -> Tensor<B, 3> {
+    let img = image.to_rgb8();
     let (w, h) = img.dimensions();
     let arr: Vec<f32> = img
         .pixels()
@@ -56,15 +63,12 @@ pub fn extract_section<B: Backend>(
     let (y0, y1) = if py < section_height / 2 {
         // Ends in the negative
         (0, section_height)
-
     } else if py + section_height / 2 > h - 1 {
         // Out of bounds
-        
+
         // log::info!("Pos out of bounds");
         (h - 1 - section_height, h - 1)
-
     } else {
-
         // log::info!("Valid");
         (py - section_height / 2, py + section_height / 2)
     };
@@ -79,5 +83,3 @@ pub fn extract_section<B: Backend>(
 
     slice
 }
-
-

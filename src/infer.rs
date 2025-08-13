@@ -31,12 +31,17 @@ pub fn steps_to_finish<B: Backend>(
     let image = load_image(image_path, device);
 
     for i in 0..max_iter {
+        let time = Tensor::<B, 1>::from_data(
+            TensorData::from([(i as f32 / max_iter as f32).powi(2)]),
+            device,
+        );
         let ([cx, cy], rel_size) = pos_data.get_params_detach();
         let image_section = extract_section(image.clone(), cx, cy, rel_size);
         let step_in = VisionModelStepInput {
             image_section,
             pos_data: pos_data.clone(),
             lstm_state,
+            time
         };
 
         let step_out = model.forward(step_in);
@@ -72,7 +77,6 @@ pub fn steps_to_finish<B: Backend>(
 
     result
 }
-
 
 pub struct StepInfo<B: Backend> {
     pub pos_in: PositioningData<B>,

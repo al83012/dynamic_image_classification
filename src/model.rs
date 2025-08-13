@@ -52,7 +52,8 @@ impl VisionModelConfig {
         let conv_2_out_img_dim = [conv_1_out_img_dim[0] - 2, conv_1_out_img_dim[1] - 2];
 
         let conv_2_out_flat = conv_2_out_channel * conv_2_out_img_dim[0] * conv_2_out_img_dim[1];
-        let lstm_input_size = conv_2_out_flat + positioning_data_size;
+        let time_size = 1;
+        let lstm_input_size = conv_2_out_flat + positioning_data_size + time_size;
         let model_total_output_size = self.num_classes + positioning_data_size;
 
         // println!("conv_2_out_channel = {}", conv_2_out_channel);
@@ -93,6 +94,7 @@ pub struct VisionModelStepInput<B: Backend> {
     pub image_section: Tensor<B, 3>, // [Channels, Width, Height]
     pub pos_data: PositioningData<B>,
     pub lstm_state: Option<LstmState<B, 2>>,
+    pub time: Tensor<B, 1>,
 }
 
 impl<B: Backend> VisionModel<B> {
@@ -122,9 +124,9 @@ impl<B: Backend> VisionModel<B> {
         let x: Tensor<B, 2> = x.flatten(1, 3); //[batch_size, image net out]
                                                //flattened_image]
         let squeezed_pos_data = pos_data.0.squeeze(0); // [batch_size, pos_data]
-
+        
         // Concat the flattened image and pos data (while keeping the 1-sized sequence and batch)
-        let cat_vec = vec![x, squeezed_pos_data];
+        let cat_vec = vec![x, squeezed_pos_data, input.time.unsqueeze()];
         let x = Tensor::cat(cat_vec, 1).unsqueeze();
         // println!("Before Lstm");
         let (x_out, next_state) = self.lstm.forward(x, input.lstm_state);

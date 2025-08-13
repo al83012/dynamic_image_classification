@@ -32,7 +32,6 @@ pub mod save;
 pub mod train;
 
 fn main() {
-
     // let mut optim_data = OptimizerData::<MyAutodiffBackend> {
     //     class_optim: AdamConfig::new().init(),
     //     pos_optim: AdamConfig::new().init(),
@@ -47,13 +46,11 @@ fn main() {
     //     "model_artifacts-rerun1",
     // );
 
-    display::display_inference();
+    // display::display_inference();
+    train();
 }
 
-
-
 fn train() {
-
     if cfg!(feature = "debug_log") {
         let logfile = FileAppender::builder()
             .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
@@ -82,13 +79,13 @@ fn train() {
     //     .load(artifact_path.into(), &device)
     //     .expect("Error decoding state from specified path");
 
-    let model_name = "tests";
+    let model_name = "tests_grad_blaming";
 
     let training_config = TrainingConfig::new(model_name.to_string());
 
     let model = VisionModelConfig::new(3).init(&device)/* .load_record(record) */;
     let model = load_from_highest(model_name, model, &device);
-    save_to_new_highest(model_name, &model);
+    // save_to_new_highest(model_name, &model);
 
     let mut training_manager = TrainingManager::<MyAutodiffBackend>::init(training_config, device);
 

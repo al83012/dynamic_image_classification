@@ -7,7 +7,7 @@ use burn::prelude::*;
 use burn::tensor::backend::AutodiffBackend;
 use burn_train::metric::MetricEntry;
 use burn_train::renderer::tui::TuiMetricsRenderer;
-use burn_train::renderer::{MetricState, MetricsRenderer, TrainingProgress};
+use burn_train::renderer::{self, MetricState, MetricsRenderer, TrainingProgress};
 use burn_train::TrainingInterrupter;
 use nn::loss::{MseLoss, Reduction};
 use nn::LstmState;
@@ -46,7 +46,7 @@ pub struct TrainingConfig {
     certainty_slope: (f32, f32),
     #[config(default = "2.0")]
     iter_improvement_weight: f32,
-    #[config(default = "0.1")]
+    #[config(default = "0.2")]
     iter_time_weight: f32,
     #[config(default = "1.5e-5")]
     class_lr: f64,
@@ -126,10 +126,19 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut class_grad_accum = GradientsAccumulator::new();
 
+        let mut previous_loss: Tensor<B, 1> =
+            Tensor::from_data(TensorData::from([0.0]), &self.device);
+
+        let mut class_improvement_grad_accum = GradientsAccumulator::new();
+
         // println!("Setup for iteration");
         // log::info!("Setup for iteration");
 
         for i in 0..self.config.max_iter_count {
+            let time = Tensor::<B, 1>::from_data(
+                TensorData::from([(i as f32 / self.config.max_iter_count as f32).powi(2)]),
+                &self.device,
+            );
             // log::info!("Iteration Start [{i}]");
             current_iter = i;
             // println!("Iter[{current_iter:?}]");
@@ -140,6 +149,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 image_section,
                 pos_data: pos_data.clone(),
                 lstm_state,
+                time,
             };
 
             // log::info!("Loaded input");
@@ -192,7 +202,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // println!("After loss");
 
-            let class_grad = class_loss.backward();
+            let class_grad = class_loss.clone().backward();
             let class_grad_params = GradientsParams::from_grads(class_grad, &model);
             class_grad_accum.accumulate(&model, class_grad_params);
 
@@ -206,7 +216,16 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
             }
 
-            if can_finish || i + 1 == self.config.max_iter_count {
+            if i % 2 == 1 {
+                let improvement_loss = class_loss.clone() - previous_loss.clone();
+                previous_loss = class_loss.clone();
+
+                let grads = GradientsParams::from_grads(improvement_loss.backward(), &model);
+
+                class_improvement_grad_accum.accumulate(&model, grads);
+            }
+
+            if (can_finish && i > 2) || i + 1 == self.config.max_iter_count {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
                 last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
@@ -243,15 +262,18 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         // };
 
         // let total_reward = acc_reward * time_goal - last_loss * 10.0 * (1.0 - time_goal) - aggregate_loss * 5.0 * (1.0 - time_goal) + 3.0;
-        let total_loss =
-            (last_loss - aggregate_loss) * 2.0 + smoothstep(time_needed) * 0.15 + avg_norm_quality * 0.012;
+        let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
+            + time_needed * time_needed * self.config.iter_time_weight
+            + avg_norm_quality * self.config.norm_quality_weight;
 
         let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
         let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
         let pos_dummy_grad = pos_dummy_loss.backward();
         let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
 
-        model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
+        model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
+
+        // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
 
         // log::info!("Did full train for image");
         (
@@ -278,11 +300,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let mut window_avg_loss_metric =
             AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 100);
 
-        let mut window_correct_metric = AvgMetric::new(
-            "W %".to_owned(),
-            "w_correct_guess".to_owned(),
-            100,
-        );
+        let mut window_correct_metric =
+            AvgMetric::new("W %".to_owned(), "w_correct_guess".to_owned(), 100);
 
         let mut window_correct_covid_metric = AvgMetric::new(
             "W % COVID".to_owned(),
@@ -301,11 +320,11 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             "w_correct_guess_pneumonia".to_owned(),
             50,
         );
-        let mut window_avg_iter = AvgMetric::new(
-            "W Iter".to_owned(),
-            "w_iter_number".to_owned(),
-            50,
-        );
+        let mut window_avg_iter =
+            AvgMetric::new("W Iter".to_owned(), "w_iter_number".to_owned(), 50);
+
+        let mut window_avg_loss_improvement =
+            AvgMetric::new("D_Loss / iter".to_owned(), "d_loss_iter".to_owned(), 50);
 
         save::save_to_new_highest(&self.config.save_as, &model);
 
@@ -369,7 +388,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                         0.0
                     });
 
-                if let Some(w_iter_num) = window_avg_iter.update_saturating(stats.finished_after as f64) {
+                if let Some(w_iter_num) =
+                    window_avg_iter.update_saturating(stats.finished_after as f64)
+                {
                     renderer.update_train(w_iter_num);
                 }
 
@@ -405,6 +426,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     window_correct_pneumonia_metric.update_saturating_or_avg(next_pneum_stat)
                 {
                     renderer.update_train(pneum_m);
+                }
+
+                if let Some(improvement) = window_avg_loss_improvement
+                    .update_saturating((stats.avg_loss - stats.last_loss) as f64 / stats.finished_after as f64)
+                {
+                    renderer.update_train(improvement);
                 }
 
                 renderer.update_train(new_iter_metric);
@@ -461,5 +488,5 @@ pub fn tensor_argmax<B: Backend>(t: Tensor<B, 1>) -> (usize, f32) {
 
 fn smoothstep(val: f32) -> f32 {
     let val = val.clamp(0.0, 1.0);
-    val * val * (3.0 - 2.0 * val)    
+    val * val * (3.0 - 2.0 * val)
 }
