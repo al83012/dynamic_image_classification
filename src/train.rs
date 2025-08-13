@@ -131,6 +131,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut class_improvement_grad_accum = GradientsAccumulator::new();
 
+        let mut aggregate_loss_improvement: f32 = 0.0;
+
         // println!("Setup for iteration");
         // log::info!("Setup for iteration");
 
@@ -216,13 +218,17 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 // model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
             }
 
-            if i % 2 == 1 {
+            if i > 1 {
                 let improvement_loss = class_loss.clone() - previous_loss.clone();
                 previous_loss = class_loss.clone();
 
-                let grads = GradientsParams::from_grads(improvement_loss.backward(), &model);
+                aggregate_loss_improvement += improvement_loss;
 
-                class_improvement_grad_accum.accumulate(&model, grads);
+
+
+                // let grads = GradientsParams::from_grads(improvement_loss.backward(), &model);
+
+                // class_improvement_grad_accum.accumulate(&model, grads);
             }
 
             if (can_finish && i > 2) || i + 1 == self.config.max_iter_count {
@@ -262,6 +268,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         // };
 
         // let total_reward = acc_reward * time_goal - last_loss * 10.0 * (1.0 - time_goal) - aggregate_loss * 5.0 * (1.0 - time_goal) + 3.0;
+
+        let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
+
         let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
             + time_needed * time_needed * self.config.iter_time_weight
             + avg_norm_quality * self.config.norm_quality_weight;
@@ -271,9 +280,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let pos_dummy_grad = pos_dummy_loss.backward();
         let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
 
-        model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
+        // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
 
-        // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
+        model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
 
         // log::info!("Did full train for image");
         (
