@@ -5,8 +5,14 @@ edition = "2024"
 
 [dependencies]
 burn = { version = "~0.17", features = ["train", "wgpu", "vision", "tui", "metrics"] }
-image = "*"
+# image = "*"
 rand = "*"
 burn-train = "*"
 log = "*"
 log4rs = "*"
+nannou = "*"
+noon = "*"
+
+[features]
+default = []
+debug_log = []

@@ -21,15 +21,12 @@ pub fn get_highest_version(version_of: &str) -> Option<usize> {
         .filter_map(|entry| entry.ok())
         .filter_map(|entry| {
             let file_string = entry.file_name().to_string_lossy().to_string();
+
             let (file_name, extension) =
                 file_string.rsplit_once(".").expect("Files need extensions");
 
-            if extension
-                            .eq(".mpk") {
-                Some(())
-            } else {
-                None
-            }
+
+            if extension.eq("mpk") { Some(()) } else { None }
                 .and_then(|_| file_name.parse::<usize>().ok())
         });
 
@@ -55,7 +52,6 @@ pub fn load_from_highest<B: Backend>(
     let highest = get_highest_version(version_of);
 
     if highest.is_none() {
-        println!("No highest");
         return model;
     }
 

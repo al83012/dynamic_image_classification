@@ -7,7 +7,7 @@ use crate::data::ClassificationBatch;
 // Tensor[channels, x, y]
 pub const IMAGE_FOLDER: &str = "data";
 pub fn load_image<B: Backend>(name: &str, device: &B::Device) -> Tensor<B, 3> {
-    let img = image::open(format!("{IMAGE_FOLDER}/{name}"))
+    let img = nannou::image::open(format!("{IMAGE_FOLDER}/{name}"))
         .expect("Error loading image")
         .to_rgb8();
     let (w, h) = img.dimensions();
@@ -79,3 +79,5 @@ pub fn extract_section<B: Backend>(
 
     slice
 }
+
+

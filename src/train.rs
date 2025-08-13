@@ -244,7 +244,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         // let total_reward = acc_reward * time_goal - last_loss * 10.0 * (1.0 - time_goal) - aggregate_loss * 5.0 * (1.0 - time_goal) + 3.0;
         let total_loss =
-            (last_loss - aggregate_loss) * 2.0 + time_needed * 0.1 + avg_norm_quality * 0.012;
+            (last_loss - aggregate_loss) * 2.0 + smoothstep(time_needed) * 0.15 + avg_norm_quality * 0.012;
 
         let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
         let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
@@ -279,26 +279,31 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 100);
 
         let mut window_correct_metric = AvgMetric::new(
-            "W Correct guess".to_owned(),
+            "W %".to_owned(),
             "w_correct_guess".to_owned(),
             100,
         );
 
         let mut window_correct_covid_metric = AvgMetric::new(
-            "W Correct guess COVID".to_owned(),
+            "W % COVID".to_owned(),
             "w_correct_guess_covid".to_owned(),
             50,
         );
 
         let mut window_correct_normal_metric = AvgMetric::new(
-            "W Correct guess NORMAL".to_owned(),
+            "W % NORMAL".to_owned(),
             "w_correct_guess_normal".to_owned(),
             50,
         );
 
         let mut window_correct_pneumonia_metric = AvgMetric::new(
-            "W Correct guess PNEUMONIA".to_owned(),
+            "W % PNEUM".to_owned(),
             "w_correct_guess_pneumonia".to_owned(),
+            50,
+        );
+        let mut window_avg_iter = AvgMetric::new(
+            "W Iter".to_owned(),
+            "w_iter_number".to_owned(),
             50,
         );
 
@@ -321,7 +326,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
                 let new_iter_metric = MetricState::Numeric(
                     MetricEntry {
-                        name: "Iteration Number".to_string(),
+                        name: "Iter".to_string(),
                         formatted: "Iter Num".to_string(),
                         serialize: "itr_num".to_string(),
                     },
@@ -339,7 +344,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
                 let new_last_loss_metric = MetricState::Numeric(
                     MetricEntry {
-                        name: "Last Loss".to_string(),
+                        name: "Last L".to_string(),
                         formatted: "Last Loss".to_string(),
                         serialize: "last_loss".to_string(),
                     },
@@ -348,7 +353,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
                 let new_avg_loss_metric = MetricState::Numeric(
                     MetricEntry {
-                        name: "Avg Loss".to_string(),
+                        name: "Avg L".to_string(),
                         formatted: "Avg Loss".to_string(),
                         serialize: "avg_loss".to_string(),
                     },
@@ -363,6 +368,10 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     } else {
                         0.0
                     });
+
+                if let Some(w_iter_num) = window_avg_iter.update_saturating(stats.finished_after as f64) {
+                    renderer.update_train(w_iter_num);
+                }
 
                 let next_cov_stat = if stats.target == 0 {
                     Some(if stats.last_out == 0 { 100.0 } else { 0.0 })
@@ -435,17 +444,22 @@ impl<B: AutodiffBackend> TrainingManager<B> {
     }
 }
 
-fn concentration<B: Backend>(tensor: Tensor<B, 1>) -> f32 {
+pub fn concentration<B: Backend>(tensor: Tensor<B, 1>) -> f32 {
     let soft = burn::tensor::activation::softmax(tensor, 0);
     let (_, highest) = tensor_argmax(soft);
     highest
 }
 
-fn tensor_argmax<B: Backend>(t: Tensor<B, 1>) -> (usize, f32) {
+pub fn tensor_argmax<B: Backend>(t: Tensor<B, 1>) -> (usize, f32) {
     let vec = t.into_data().to_vec::<f32>().unwrap();
     vec.iter()
         .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
         .map(|(a, b)| (a, *b))
         .unwrap()
+}
+
+fn smoothstep(val: f32) -> f32 {
+    let val = val.clamp(0.0, 1.0);
+    val * val * (3.0 - 2.0 * val)    
 }

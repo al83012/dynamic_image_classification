@@ -23,25 +23,50 @@ use train::{TrainingConfig, TrainingManager};
 
 pub mod class;
 pub mod data;
+pub mod display;
 pub mod image;
+pub mod infer;
 pub mod metrics;
 pub mod model;
-pub mod ppo;
 pub mod save;
 pub mod train;
 
 fn main() {
-    // let logfile = FileAppender::builder()
-    //     .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
-    //     .build("log/output.log").unwrap();
-    //
-    // let config = Config::builder()
-    //     .appender(Appender::builder().build("logfile", Box::new(logfile)))
-    //     .build(Root::builder()
-    //                .appender("logfile")
-    //                .build(LevelFilter::Info)).unwrap();
-    //
-    // log4rs::init_config(config).unwrap();
+
+    // let mut optim_data = OptimizerData::<MyAutodiffBackend> {
+    //     class_optim: AdamConfig::new().init(),
+    //     pos_optim: AdamConfig::new().init(),
+    // };
+
+    // model = train_all::<MyAutodiffBackend>(
+    //     model,
+    //     &device,
+    //     &mut optim_data,
+    //     data_loader,
+    //     100,
+    //     "model_artifacts-rerun1",
+    // );
+
+    display::display_inference();
+}
+
+
+
+fn train() {
+
+    if cfg!(feature = "debug_log") {
+        let logfile = FileAppender::builder()
+            .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+            .build("log/output.log")
+            .unwrap();
+
+        let config = Config::builder()
+            .appender(Appender::builder().build("logfile", Box::new(logfile)))
+            .build(Root::builder().appender("logfile").build(LevelFilter::Info))
+            .unwrap();
+
+        log4rs::init_config(config).unwrap();
+    }
 
     log::info!("Hello, world!");
     type MyBackend = Wgpu<f32, i32>;
@@ -70,18 +95,4 @@ fn main() {
     let data_loader = CovidDataLoader::new_and_assert(&model);
 
     let model = training_manager.train_all(model, data_loader);
-
-    // let mut optim_data = OptimizerData::<MyAutodiffBackend> {
-    //     class_optim: AdamConfig::new().init(),
-    //     pos_optim: AdamConfig::new().init(),
-    // };
-
-    // model = train_all::<MyAutodiffBackend>(
-    //     model,
-    //     &device,
-    //     &mut optim_data,
-    //     data_loader,
-    //     100,
-    //     "model_artifacts-rerun1",
-    // );
 }
