@@ -271,7 +271,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let pos_dummy_grad = pos_dummy_loss.backward();
         let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
 
-        model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
+        // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
 
         // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
 
