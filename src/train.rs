@@ -222,7 +222,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 let improvement_loss = class_loss.clone() - previous_loss.clone();
                 previous_loss = class_loss.clone();
 
-                aggregate_loss_improvement += improvement_loss;
+                aggregate_loss_improvement += improvement_loss.to_data().to_vec::<f32>().unwrap()[0];
 
 
 
