@@ -44,7 +44,7 @@ pub struct TrainingConfig {
     save_as: String,
     #[config(default = "0.012")]
     norm_quality_weight: f32,
-    #[config(default = "(0.4, 0.6)")]
+    #[config(default = "(0.5, 0.5)")]
     certainty_slope: (f32, f32),
     #[config(default = "2.0")]
     iter_improvement_weight: f32,
@@ -241,7 +241,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 // class_improvement_grad_accum.accumulate(&model, grads);
             }
 
-            if (can_finish && i > 2) || i + 1 == self.config.max_iter_count {
+            if /*(can_finish && i > 2) || */ i + 1 == self.config.max_iter_count || i >= 5 {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
                 last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
