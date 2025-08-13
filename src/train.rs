@@ -252,7 +252,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             acc_reward += class_loss_single;
         }
 
-        model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+        //NOTE: This needs to be reactivated later
+        // model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
+
         // log::info!("Passed iterations");
 
         avg_norm_quality /= (current_iter + 1) as f32;
