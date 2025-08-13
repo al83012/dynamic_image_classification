@@ -27,6 +27,7 @@ pub struct StepStatistics {
     pub finished_after: usize,
     pub target: usize,
     pub last_out: usize,
+    pub avg_step_improvement: f32,
 }
 
 pub struct OptimizerData<B: AutodiffBackend> {
@@ -51,7 +52,7 @@ pub struct TrainingConfig {
     iter_time_weight: f32,
     #[config(default = "1.5e-5")]
     class_lr: f64,
-    #[config(default = "5e-5")]
+    #[config(default = "1e-5")]
     pos_lr: f64,
     #[config(default = "0.4")]
     lr_min_decayed_portion: f64,
@@ -179,13 +180,13 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             let squeezed_class = class_out.clone().detach().squeeze_dims(&[0, 1]);
 
-            let output_vec: Vec<f32> = class_out
-                .clone()
-                .detach()
-                .squeeze_dims::<1>(&[0, 1])
-                .to_data()
-                .to_vec()
-                .expect("Error unwrapping output");
+            // let output_vec: Vec<f32> = class_out
+            //     .clone()
+            //     .detach()
+            //     .squeeze_dims::<1>(&[0, 1])
+            //     .to_data()
+            //     .to_vec()
+            //     .expect("Error unwrapping output");
 
             // assert_eq!(output_vec.len(), 2);
 
@@ -224,10 +225,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             if i > 1 {
                 // The lower, the better the model is performing
+                // Or rather: negative is good
                 let loss_change = class_loss.clone() - previous_loss.clone();
                 previous_loss = class_loss.clone();
 
                 let loss_change = loss_change.to_data().to_vec::<f32>().unwrap()[0];
+                aggregate_loss_improvement -= loss_change;
 
                 let pos_grad = pos_out.mul_scalar(-loss_change).backward();
                 let pos_grad_params = GradientsParams::from_grads(pos_grad, &model);
@@ -255,6 +258,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         avg_norm_quality /= (current_iter + 1) as f32;
 
         aggregate_loss /= (current_iter + 1) as f32;
+
+        let avg_loss_improvement = aggregate_loss_improvement / (current_iter as f32).max(1.0);
 
         // acc_reward += if correct_output { 4.0 } else { -3.0 };
 
@@ -307,6 +312,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 finished_after: current_iter + 1,
                 last_out: last_guess,
                 target,
+                avg_step_improvement: avg_loss_improvement,
             },
         )
     }
@@ -451,7 +457,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 }
 
                 if let Some(improvement) = window_avg_loss_improvement.update_saturating(
-                    (stats.avg_loss - stats.last_loss) as f64 / stats.finished_after as f64,
+                    stats.avg_step_improvement as f64
                 ) {
                     renderer.update_train(improvement);
                 }
