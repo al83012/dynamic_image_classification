@@ -5,6 +5,7 @@ use burn::optim::adaptor::OptimizerAdaptor;
 use burn::optim::{Adam, AdamConfig, GradientsAccumulator, GradientsParams, Optimizer};
 use burn::prelude::*;
 use burn::tensor::backend::AutodiffBackend;
+use burn::tensor::loss;
 use burn_train::metric::MetricEntry;
 use burn_train::renderer::tui::TuiMetricsRenderer;
 use burn_train::renderer::{self, MetricState, MetricsRenderer, TrainingProgress};
@@ -125,11 +126,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let mut avg_norm_quality = 0.0;
 
         let mut class_grad_accum = GradientsAccumulator::new();
+        let mut pos_grad_accum = GradientsAccumulator::new();
 
         let mut previous_loss: Tensor<B, 1> =
             Tensor::from_data(TensorData::from([0.0]), &self.device);
 
-        let mut class_improvement_grad_accum = GradientsAccumulator::new();
+        // let mut class_improvement_grad_accum = GradientsAccumulator::new();
 
         let mut aggregate_loss_improvement: f32 = 0.0;
 
@@ -210,21 +212,26 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // log::info!("did loss and gradients");
 
-            let pos_out_dummy_diff = pos_out.mean();
-            pos_out_dummy_diff_acc =
-                Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
+            // let pos_out_dummy_diff = pos_out.mean();
+            // pos_out_dummy_diff_acc =
+                // Tensor::cat(vec![pos_out_dummy_diff_acc, pos_out_dummy_diff], 0);
+
 
             if i % 5 == 0 {
                 // model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
             }
 
+
             if i > 1 {
-                let improvement_loss = class_loss.clone() - previous_loss.clone();
+                // The lower, the better the model is performing
+                let loss_change = class_loss.clone() - previous_loss.clone();
                 previous_loss = class_loss.clone();
 
-                aggregate_loss_improvement += improvement_loss.to_data().to_vec::<f32>().unwrap()[0];
+                let loss_change = loss_change.to_data().to_vec::<f32>().unwrap()[0];
 
-
+                let pos_grad = pos_out.mul_scalar(-loss_change).backward();
+                let pos_grad_params = GradientsParams::from_grads(pos_grad, &model);
+                pos_grad_accum.accumulate(&model, pos_grad_params);
 
                 // let grads = GradientsParams::from_grads(improvement_loss.backward(), &model);
 
@@ -269,20 +276,26 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         // let total_reward = acc_reward * time_goal - last_loss * 10.0 * (1.0 - time_goal) - aggregate_loss * 5.0 * (1.0 - time_goal) + 3.0;
 
-        let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
+        // let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
 
-        let total_loss = (avg_improvement_loss) * self.config.iter_improvement_weight
+        let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
             + time_needed * time_needed * self.config.iter_time_weight
             + avg_norm_quality * self.config.norm_quality_weight;
 
-        let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
-        let pos_dummy_grad = pos_dummy_loss.backward();
-        let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
+        // let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
+        // let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
+        // let pos_dummy_grad = pos_dummy_loss.backward();
+        // let gradients = pos_grad_accum.grads();
+        
+        // let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
+        // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params * total_loss);
+
+        model = pos_optim.step(adj_pos_lr, model, pos_grad_accum.grads());
 
         // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
 
-        model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
+        //OG
+        // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
 
         // log::info!("Did full train for image");
         (
@@ -437,9 +450,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     renderer.update_train(pneum_m);
                 }
 
-                if let Some(improvement) = window_avg_loss_improvement
-                    .update_saturating((stats.avg_loss - stats.last_loss) as f64 / stats.finished_after as f64)
-                {
+                if let Some(improvement) = window_avg_loss_improvement.update_saturating(
+                    (stats.avg_loss - stats.last_loss) as f64 / stats.finished_after as f64,
+                ) {
                     renderer.update_train(improvement);
                 }
 
