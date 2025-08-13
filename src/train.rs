@@ -271,7 +271,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
 
-        let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
+        let total_loss = (avg_improvement_loss) * self.config.iter_improvement_weight
             + time_needed * time_needed * self.config.iter_time_weight
             + avg_norm_quality * self.config.norm_quality_weight;
 
