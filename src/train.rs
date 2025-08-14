@@ -112,7 +112,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         // println!("Extracted class data");
 
         let mut pos_data = PositioningData::<B>::start(&self.device);
-        let mut lstm_state: Option<LstmState<B, 2>> = None;
+        let mut lstm_state: Option<Vec<LstmState<B, 2>>> = None;
 
         let mut pos_out_dummy_diff_acc: Tensor<B, 1> = Tensor::from_data([0.0], &self.device);
 

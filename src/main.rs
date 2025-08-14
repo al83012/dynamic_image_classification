@@ -20,7 +20,7 @@ use log4rs::{
 use model::{VisionModelConfig, VisionModelRecord};
 use save::{load_from_highest, save_to_new_highest};
 use train::{TrainingConfig, TrainingManager};
-
+pub mod modern_lstm;
 pub mod class;
 pub mod data;
 pub mod display;

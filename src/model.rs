@@ -9,13 +9,16 @@ use nn::{
 };
 use rand::Rng;
 
+use crate::modern_lstm::{StackedLstm, StackedLstmConfig};
+
 #[derive(Module, Debug)]
 pub struct VisionModel<B: Backend> {
     pool: AdaptiveAvgPool2d,
     conv_1: Conv2d<B>,
     conv_2: Conv2d<B>,
     dropout: Dropout,
-    lstm: Lstm<B>,
+    lstm: StackedLstm<B>,
+    // lstm: Lstm<B>,
     linear_pos: Linear<B>,
     linear_class: Linear<B>,
     activation: Relu,
@@ -72,7 +75,7 @@ impl VisionModelConfig {
             conv_2: Conv2dConfig::new([conv_1_out_channel, conv_2_out_channel], self.conv_2_kernel)
                 .init(device),
             dropout: Dropout { prob: self.dropout },
-            lstm: LstmConfig::new(lstm_input_size, self.lstm_hidden_size, false).init(device),
+            lstm: StackedLstmConfig::new(lstm_input_size, self.lstm_hidden_size, 3,0.1).init(device),
             linear_pos: LinearConfig::new(self.lstm_hidden_size, positioning_data_size)
                 .init(device),
             linear_class: LinearConfig::new(self.lstm_hidden_size, self.num_classes).init(device),
@@ -88,13 +91,13 @@ pub struct PositioningData<B: Backend>(pub Tensor<B, 3>);
 pub struct VisionModelStepResult<B: Backend> {
     pub current_classification: Tensor<B, 3>,
     pub next_pos: PositioningData<B>,
-    pub next_lstm_state: LstmState<B, 2>,
+    pub next_lstm_state: Vec<LstmState<B, 2>>,
 }
 
 pub struct VisionModelStepInput<B: Backend> {
     pub image_section: Tensor<B, 3>, // [Channels, Width, Height]
     pub pos_data: PositioningData<B>,
-    pub lstm_state: Option<LstmState<B, 2>>,
+    pub lstm_state: Option<Vec<LstmState<B, 2>>>,
     pub time: Tensor<B, 1>,
 }
 
