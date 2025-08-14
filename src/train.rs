@@ -39,7 +39,7 @@ pub struct OptimizerData<B: AutodiffBackend> {
 
 #[derive(Config)]
 pub struct TrainingConfig {
-    #[config(default = "10")]
+    #[config(default = "20")]
     max_iter_count: usize,
     #[config(default = "100")]
     epochs: usize,
@@ -275,8 +275,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             }
 
             if
-            /*(can_finish && i > 2) || i + 1 == self.config.max_iter_count*/
-            i == 6 {
+            (can_finish && i >= 5) || i + 1 == self.config.max_iter_count
+            {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
                 last_loss = //class_loss.detach().to_data().to_vec().unwrap()[0];

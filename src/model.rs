@@ -42,7 +42,7 @@ pub struct VisionModelConfig {
     conv_2_kernel_count: usize,
     #[config(default = "[10, 10]")]
     pool_out: [usize; 2],
-    #[config(default = "0.2")]
+    #[config(default = "0.05")]
     dropout: f64,
 }
 

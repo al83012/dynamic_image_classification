@@ -79,7 +79,7 @@ fn train() {
     //     .load(artifact_path.into(), &device)
     //     .expect("Error decoding state from specified path");
 
-    let model_name = "tests_grad_blaming_separate_steps";
+    let model_name = "stacked_lstm_split_training";
 
     let training_config = TrainingConfig::new(model_name.to_string());
 
