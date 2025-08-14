@@ -304,14 +304,18 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         // let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
 
+        // let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
+        //     + time_needed * time_needed * self.config.iter_time_weight
+        //     + avg_norm_quality * self.config.norm_quality_weight;
+
         let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
+            + last_loss
             + time_needed * time_needed * self.config.iter_time_weight
             + avg_norm_quality * self.config.norm_quality_weight;
 
         let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
+        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(-total_loss);
         let pos_dummy_grad = pos_dummy_loss.backward();
-
 
         // #[cfg(not(feature = "no_pos_proc"))]
         // let gradients = pos_grad_accum.grads();
