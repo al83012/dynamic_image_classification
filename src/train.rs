@@ -309,7 +309,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             + avg_norm_quality * self.config.norm_quality_weight;
 
         let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(-total_loss);
+        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
         let pos_dummy_grad = pos_dummy_loss.backward();
 
 
