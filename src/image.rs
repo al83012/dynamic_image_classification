@@ -29,6 +29,7 @@ pub fn image_as_tensor<B: Backend>(image: &DynamicImage, device: &B::Device) -> 
     Tensor::from_data(TensorData::new(arr, image_shape), device)
 }
 
+
 pub fn extract_section<B: Backend>(
     image: Tensor<B, 3>,
     cx: f32,

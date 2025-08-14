@@ -10,6 +10,7 @@ use burn_train::metric::MetricEntry;
 use burn_train::renderer::tui::TuiMetricsRenderer;
 use burn_train::renderer::{self, MetricState, MetricsRenderer, TrainingProgress};
 use burn_train::TrainingInterrupter;
+use nannou::conrod_core::render;
 use nn::loss::{MseLoss, Reduction};
 use nn::LstmState;
 
@@ -22,6 +23,7 @@ use crate::save;
 #[derive(Debug, Clone, Copy)]
 pub struct StepStatistics {
     pub reward: f32,
+    pub first_loss: f32,
     pub last_loss: f32,
     pub avg_loss: f32,
     pub finished_after: usize,
@@ -37,7 +39,7 @@ pub struct OptimizerData<B: AutodiffBackend> {
 
 #[derive(Config)]
 pub struct TrainingConfig {
-    #[config(default = "64")]
+    #[config(default = "10")]
     max_iter_count: usize,
     #[config(default = "100")]
     epochs: usize,
@@ -128,6 +130,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut avg_norm_quality = 0.0;
 
+        let mut first_loss = 0.0;
+
         #[cfg(not(feature = "no_class_proc"))]
         let mut class_grad_accum = GradientsAccumulator::new();
 
@@ -212,9 +216,19 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             let class_adj_strength = smoothstep(time_val * 2.0) / 2.0 + 0.5;
             let class_adj_target = class_oh_target.clone() * class_adj_strength;
 
-            let class_loss = mse_loss.forward(class_out, class_adj_target, Reduction::Auto);
-            let class_loss_single: f32 =
-                class_loss.clone().detach().into_data().to_vec().unwrap()[0];
+            let class_loss = mse_loss.forward(class_out.clone(), class_adj_target, Reduction::Auto);
+            let class_loss_full =
+                mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Auto);
+            let class_loss_single: f32 = class_loss_full
+                .clone()
+                .detach()
+                .into_data()
+                .to_vec()
+                .unwrap()[0];
+
+            if i == 0 {
+                first_loss = class_loss_single;
+            }
 
             aggregate_loss += class_loss_single;
 
@@ -243,8 +257,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             if i > 1 {
                 // The lower, the better the model is performing
                 // Or rather: negative is good
-                let loss_change = class_loss.clone() - previous_loss.clone();
-                previous_loss = class_loss.clone();
+                let loss_change = class_loss_full.clone() - previous_loss.clone();
+                previous_loss = class_loss_full.clone();
 
                 let loss_change_f = loss_change.to_data().to_vec::<f32>().unwrap()[0];
                 aggregate_loss_improvement -= loss_change_f;
@@ -265,7 +279,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             i == 6 {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
-                last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
+                last_loss = //class_loss.detach().to_data().to_vec().unwrap()[0];
+                    class_loss_single;
                 acc_reward -= class_loss_single;
                 break;
             }
@@ -351,6 +366,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         (
             model,
             StepStatistics {
+                first_loss,
                 reward: -total_loss,
                 last_loss,
                 avg_loss: aggregate_loss,
@@ -398,6 +414,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut window_avg_loss_improvement =
             AvgMetric::new("D_Loss / iter".to_owned(), "d_loss_iter".to_owned(), 250);
+
+        let mut window_first_last_improvement = AvgMetric::new(
+            "W F/L".to_owned(),
+            "w_first_last_improvement".to_owned(),
+            250,
+        );
 
         save::save_to_new_highest(&self.config.save_as, &model);
 
@@ -450,6 +472,15 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                         serialize: "avg_loss".to_string(),
                     },
                     stats.avg_loss as f64,
+                );
+
+                let new_first_last_metric = MetricState::Numeric(
+                    MetricEntry {
+                        name: "F/L".to_string(),
+                        formatted: "F/L".to_string(),
+                        serialize: "first_last_improvement".to_string(),
+                    },
+                    stats.first_loss as f64 - stats.last_loss as f64,
                 );
 
                 let new_window_avg_loss_metric =
@@ -507,11 +538,18 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     renderer.update_train(improvement);
                 }
 
+                if let Some(fl_imp) = window_first_last_improvement
+                    .update_saturating(stats.first_loss as f64 - stats.last_loss as f64)
+                {
+                    renderer.update_train(fl_imp);
+                }
+
                 renderer.update_train(new_iter_metric);
                 renderer.update_train(new_reward_metric);
                 renderer.update_train(new_last_loss_metric);
                 renderer.update_train(new_avg_loss_metric);
                 renderer.update_train(new_window_avg_loss_metric);
+                renderer.update_train(new_first_last_metric);
 
                 if let Some(w_correct) = new_window_correct_guess_metric {
                     renderer.update_train(w_correct);
