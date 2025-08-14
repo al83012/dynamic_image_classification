@@ -56,6 +56,7 @@ pub fn load_from_highest<B: Backend>(
     }
 
     let highest = highest.unwrap();
+    println!("Loading {highest}");
 
     let file_path_str = format!("model_artifacts/{version_of}/{highest}.mpk");
     let file_path = PathBuf::from(file_path_str);

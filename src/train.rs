@@ -126,10 +126,11 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         let mut avg_norm_quality = 0.0;
 
+        #[cfg(not(feature = "no_class_proc"))]
         let mut class_grad_accum = GradientsAccumulator::new();
 
-        #[cfg(not(feature = "no_pos_proc"))]
-        let mut pos_grad_accum = GradientsAccumulator::new();
+        // #[cfg(not(feature = "no_pos_proc"))]
+        // let mut pos_grad_accum = GradientsAccumulator::new();
 
         let mut previous_loss: Tensor<B, 1> =
             Tensor::from_data(TensorData::from([0.0]), &self.device);
@@ -308,21 +309,21 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             + avg_norm_quality * self.config.norm_quality_weight;
 
         let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(total_loss);
+        let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(-total_loss);
         let pos_dummy_grad = pos_dummy_loss.backward();
 
 
-        #[cfg(not(feature = "no_pos_proc"))]
-        let gradients = pos_grad_accum.grads();
+        // #[cfg(not(feature = "no_pos_proc"))]
+        // let gradients = pos_grad_accum.grads();
 
-        // let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
+        let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
         // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params * total_loss);
 
         // model = pos_optim.step(adj_pos_lr, model, pos_grad_accum.grads());
 
         // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
 
-        //OG
+        //NOTE: OG
         #[cfg(not(feature = "no_pos_proc"))]
         {
             model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params);
@@ -352,33 +353,33 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let mut renderer = TuiMetricsRenderer::new(train_interrupter, None);
 
         let mut window_avg_loss_metric =
-            AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 100);
+            AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 250);
 
         let mut window_correct_metric =
-            AvgMetric::new("W %".to_owned(), "w_correct_guess".to_owned(), 100);
+            AvgMetric::new("W %".to_owned(), "w_correct_guess".to_owned(), 250);
 
         let mut window_correct_covid_metric = AvgMetric::new(
             "W % COVID".to_owned(),
             "w_correct_guess_covid".to_owned(),
-            50,
+            100,
         );
 
         let mut window_correct_normal_metric = AvgMetric::new(
             "W % NORMAL".to_owned(),
             "w_correct_guess_normal".to_owned(),
-            50,
+            100,
         );
 
         let mut window_correct_pneumonia_metric = AvgMetric::new(
             "W % PNEUM".to_owned(),
             "w_correct_guess_pneumonia".to_owned(),
-            50,
+            100,
         );
         let mut window_avg_iter =
-            AvgMetric::new("W Iter".to_owned(), "w_iter_number".to_owned(), 50);
+            AvgMetric::new("W Iter".to_owned(), "w_iter_number".to_owned(), 250);
 
         let mut window_avg_loss_improvement =
-            AvgMetric::new("D_Loss / iter".to_owned(), "d_loss_iter".to_owned(), 50);
+            AvgMetric::new("D_Loss / iter".to_owned(), "d_loss_iter".to_owned(), 250);
 
         save::save_to_new_highest(&self.config.save_as, &model);
 

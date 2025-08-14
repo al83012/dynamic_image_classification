@@ -13,7 +13,7 @@ log4rs = "*"
 nannou = "*"
 
 [features]
-default = ["no_pos_proc"]
+default = ["no_class_proc", "no_pos_proc"]
 debug_log = []
 no_pos_proc = []
 no_class_proc = []
