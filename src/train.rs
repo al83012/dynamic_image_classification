@@ -145,10 +145,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         // log::info!("Setup for iteration");
 
         for i in 0..self.config.max_iter_count {
-            let time = Tensor::<B, 1>::from_data(
-                TensorData::from([(i as f32 / self.config.max_iter_count as f32).powi(2)]),
-                &self.device,
-            );
+            let time_val = i as f32 / self.config.max_iter_count as f32;
+            let time =
+                Tensor::<B, 1>::from_data(TensorData::from([time_val.powi(2)]), &self.device);
             // log::info!("Iteration Start [{i}]");
             current_iter = i;
             // println!("Iter[{current_iter:?}]");
@@ -210,7 +209,10 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // println!("After argmax");
 
-            let class_loss = mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Auto);
+            let class_adj_strength = smoothstep(time_val * 2.0) / 2.0 + 0.5;
+            let class_adj_target = class_oh_target.clone() * class_adj_strength;
+
+            let class_loss = mse_loss.forward(class_out, class_adj_target, Reduction::Auto);
             let class_loss_single: f32 =
                 class_loss.clone().detach().into_data().to_vec().unwrap()[0];
 
@@ -258,7 +260,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 // self.gradient_accum.accumulate(&model, grads);
             }
 
-            if (can_finish && i > 2) || i + 1 == self.config.max_iter_count{
+            if
+            /*(can_finish && i > 2) || i + 1 == self.config.max_iter_count*/
+            i == 6 {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
                 last_loss = class_loss.detach().to_data().to_vec().unwrap()[0];
@@ -306,13 +310,13 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         // let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
 
-        // let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
-        //     + time_needed * time_needed * self.config.iter_time_weight
-        //     + avg_norm_quality * self.config.norm_quality_weight;
+        let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
+            + time_needed * time_needed * self.config.iter_time_weight
+            + avg_norm_quality * self.config.norm_quality_weight;
 
-        let total_loss = last_loss
-            + (last_loss - aggregate_loss) * self.config.iter_improvement_weight
-            + time_needed * self.config.iter_time_weight + 10.0;
+        // let total_loss = last_loss
+        //     + (last_loss - aggregate_loss) * self.config.iter_improvement_weight
+        //     + time_needed * self.config.iter_time_weight + 10.0;
 
         // let total_loss = if last_loss > aggregate_loss {
         //     if last_loss < 0.1 {
