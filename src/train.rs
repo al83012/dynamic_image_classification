@@ -42,9 +42,9 @@ pub struct OptimizerData<B: AutodiffBackend> {
 
 #[derive(Config)]
 pub struct TrainingConfig {
-    #[config(default = "20")]
-    max_iter_count: usize,
     #[config(default = "40")]
+    max_iter_count: usize,
+    #[config(default = "80")]
     epochs: usize,
     save_as: String,
     #[config(default = "0.012")]
@@ -55,7 +55,7 @@ pub struct TrainingConfig {
     iter_improvement_weight: f32,
     #[config(default = "0.2")]
     iter_time_weight: f32,
-    #[config(default = "1.5e-5")]
+    #[config(default = "5e-5")]
     class_lr: f64,
     #[config(default = "5e-5")]
     pos_lr: f64,
@@ -187,7 +187,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             // println!("After fwd");
             lstm_state = Some(step_out.next_lstm_state);
 
-            let class_out = softmax( step_out.current_classification, 2);
+            let class_out = softmax(step_out.current_classification, 2);
             let new_pos_data = step_out.next_pos;
             let pos_out = new_pos_data.clone().0;
             #[cfg(feature = "no_pos_proc")]
@@ -233,7 +233,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // println!("After argmax");
 
-            let class_adj_strength = smoothstep(time_val * 2.0);
+            let class_adj_strength = smoothstep(time_val * 3.0) * 2.0 / 3.0 + 1.0 / 3.0;
             // println!("Target: {class_adj_strength:.2}");
             let class_adj_target = class_oh_target.clone() * class_adj_strength;
 

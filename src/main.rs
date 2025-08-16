@@ -80,7 +80,7 @@ fn train() {
     //     .load(artifact_path.into(), &device)
     //     .expect("Error decoding state from specified path");
 
-    let model_name = "combined_training";
+    let model_name = "combined_training_adj_goals";
 
     let training_config = TrainingConfig::new(model_name.to_string());
 
