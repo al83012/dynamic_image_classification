@@ -42,18 +42,18 @@ pub struct OptimizerData<B: AutodiffBackend> {
 
 #[derive(Config)]
 pub struct TrainingConfig {
-    #[config(default = "40")]
+    #[config(default = "20")]
     max_iter_count: usize,
     #[config(default = "80")]
     epochs: usize,
     save_as: String,
     #[config(default = "0.012")]
     norm_quality_weight: f32,
-    #[config(default = "(0.4, 0.9)")]
+    #[config(default = "(0.4, 0.7)")]
     certainty_slope: (f32, f32),
     #[config(default = "2.0")]
     iter_improvement_weight: f32,
-    #[config(default = "0.2")]
+    #[config(default = "0.5")]
     iter_time_weight: f32,
     #[config(default = "5e-5")]
     class_lr: f64,
@@ -162,8 +162,10 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         for i in 0..self.config.max_iter_count {
             // log::info!("Step: {i}");
             let time_val = i as f32 / self.config.max_iter_count as f32;
+
+            let class_adj_strength = smoothstep(time_val * 3.0) * 2.0 / 3.0 + 1.0 / 3.0;
             let time =
-                Tensor::<B, 1>::from_data(TensorData::from([time_val.powi(2)]), &self.device);
+                Tensor::<B, 1>::from_data(TensorData::from([class_adj_strength]), &self.device);
             // log::info!("Iteration Start [{i}]");
             current_iter = i;
             // println!("Iter[{current_iter:?}]");
@@ -233,13 +235,17 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // println!("After argmax");
 
-            let class_adj_strength = smoothstep(time_val * 3.0) * 2.0 / 3.0 + 1.0 / 3.0;
             // println!("Target: {class_adj_strength:.2}");
             let class_adj_target = class_oh_target.clone() * class_adj_strength;
 
             // log::info!("Adj target: {class_adj_target:.2}");
 
-            let class_loss = mse_loss.forward(class_out.clone(), class_adj_target, Reduction::Auto);
+            // let optimization_need = smoothstep(2.0 * (time_val - 0.5));
+            let optimization_need = 1.0;
+
+            // NOTE: Weighing the classification loss by an adjusted timestep in order to stress
+            // that the model should not just reach the iteration limit
+            let class_loss = mse_loss.forward(class_out.clone(), class_adj_target, Reduction::Auto).mul_scalar(optimization_need);
             let class_loss_full =
                 mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Auto);
             let class_loss_single: f32 = class_loss_full
