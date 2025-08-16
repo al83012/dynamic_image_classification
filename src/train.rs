@@ -240,8 +240,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // log::info!("Adj target: {class_adj_target:.2}");
 
-            // let optimization_need = smoothstep(2.0 * (time_val - 0.5));
-            let optimization_need = 1.0;
+            let optimization_need = smoothstep(2.0 * (time_val - 0.5)) * 1.2 + 1.0;
+            // let optimization_need = 1.0;
 
             // NOTE: Weighing the classification loss by an adjusted timestep in order to stress
             // that the model should not just reach the iteration limit
