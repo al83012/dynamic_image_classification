@@ -47,8 +47,8 @@ fn main() {
     //     "model_artifacts-rerun1",
     // );
 
-    // display::display_inference();
-    train();
+    display::display_inference();
+    // train();
 }
 
 fn train() {

@@ -38,11 +38,11 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
         .build()
         .unwrap();
 
-    let image_path = "covid/Covid19-dataset/test/Normal/0101.jpeg";
+    let image_path = "covid/Covid19-dataset/test/Viral Pneumonia/0101.jpeg";
 
     let device = Default::default();
 
-    let model_name = "tests";
+    let model_name = "combined_optimization_need";
 
     let model :VisionModel<MyBackend> = VisionModelConfig::new(3).init(&device)/* .load_record(record) */;
     let model = load_from_highest(model_name, model, &device);
@@ -72,18 +72,13 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
 
 pub fn view<B: Backend>(app: &App, model: &DisplayData<B>, frame: Frame) {
     let draw = app.draw();
-    draw.background().rgb(
-        31.0 / 255.0,
-        15.0 / 255.0,
-        83.0 / 255.0
-    );
+    draw.background()
+        .rgb(31.0 / 255.0, 15.0 / 255.0, 83.0 / 255.0);
     // draw.text(&format!("{}", model.steps.len()));
     draw.to_frame(app, &frame).unwrap();
 
     draw_image(app, model, &frame);
     draw_panel(app, model, &frame);
-
-
 }
 
 pub fn draw_image<B: Backend>(app: &App, model: &DisplayData<B>, frame: &Frame) {
@@ -96,16 +91,16 @@ pub fn draw_image<B: Backend>(app: &App, model: &DisplayData<B>, frame: &Frame) 
 }
 
 pub fn draw_panel<B: Backend>(app: &App, model: &DisplayData<B>, frame: &Frame) {
-
     let panel_rect = model.panel_rect;
     let draw = app.draw();
     let info_rect = Rect::from_w_h(panel_rect.w(), 50.0)
         .align_top_of(panel_rect)
         .align_middle_x_of(panel_rect);
-    let time = app.time * 5.0;
+    let time = app.time * 2.0;
     draw.text(&format!("Time: {time:.2}"))
         .wh(info_rect.wh())
-        .xy(info_rect.xy()).rgb8(62, 128, 224);
+        .xy(info_rect.xy())
+        .rgb8(62, 128, 224);
     draw.to_frame(app, frame).unwrap();
     draw_outputs(app, model, time, frame);
 }
@@ -242,8 +237,14 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
             .wh(val_rect.wh())
             .xy(val_rect.xy())
             .rgb8(81, 89, 173);
-        
-        let text_rect = val_rect.pad_left(5.0);
+
+        let text_w = val_rect.w().max(40.0);
+        let text_h = val_rect.h();
+
+        let text_rect = Rect::from_w_h(text_w, text_h)
+            .align_left_of(val_rect)
+            .align_middle_y_of(val_rect)
+            .shift_x(5.0);
 
         draw.text(name)
             .wh(text_rect.wh())
@@ -252,7 +253,6 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
             .left_justify()
             .rgb(1.0, 1.0, 1.0);
     }
-
 
     draw.to_frame(app, frame).unwrap();
 }
