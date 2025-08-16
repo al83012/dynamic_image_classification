@@ -20,6 +20,7 @@ use log4rs::{
 use model::{VisionModelConfig, VisionModelRecord};
 use save::{load_from_highest, save_to_new_highest};
 use train::{TrainingConfig, TrainingManager};
+pub mod pos_opt;
 pub mod modern_lstm;
 pub mod class;
 pub mod data;
@@ -79,7 +80,7 @@ fn train() {
     //     .load(artifact_path.into(), &device)
     //     .expect("Error decoding state from specified path");
 
-    let model_name = "stacked_lstm_split_training";
+    let model_name = "combined_training";
 
     let training_config = TrainingConfig::new(model_name.to_string());
 
