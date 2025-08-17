@@ -16,6 +16,7 @@ use nannou::conrod_core::render;
 use nn::loss::{MseLoss, Reduction};
 use nn::LstmState;
 
+use crate::adaptive_conc::AdaptiveConcentrationGoal;
 use crate::data::{ClassificationItem, DataLoader};
 use crate::image::extract_section;
 use crate::metrics::AvgMetric;
@@ -44,7 +45,7 @@ pub struct OptimizerData<B: AutodiffBackend> {
 pub struct TrainingConfig {
     #[config(default = "20")]
     max_iter_count: usize,
-    #[config(default = "80")]
+    #[config(default = "800")]
     epochs: usize,
     save_as: String,
     #[config(default = "0.012")]
@@ -69,6 +70,7 @@ pub struct TrainingManager<B: AutodiffBackend> {
     device: B::Device,
     gradient_accum: GradientsAccumulator<VisionModel<B>>,
     pos_opt: PosOptimizationStrategy<B>,
+    adaptive_goal: AdaptiveConcentrationGoal,
 }
 
 impl<B: AutodiffBackend> TrainingManager<B> {
@@ -86,6 +88,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             device,
             gradient_accum: GradientsAccumulator::new(),
             pos_opt,
+            adaptive_goal: AdaptiveConcentrationGoal::new(0.4),
         }
     }
     fn train(
@@ -229,7 +232,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             // println!("Concentration: {concentration:.2}");
             let concentration_limit =
                 self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
-            let can_finish = concentration > concentration_limit && i >= 1;
+            let can_finish = concentration > self.adaptive_goal.current_goal && i >= 1;
 
             // log::info!("After concentration calc");
 
@@ -245,7 +248,9 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             // NOTE: Weighing the classification loss by an adjusted timestep in order to stress
             // that the model should not just reach the iteration limit
-            let class_loss = mse_loss.forward(class_out.clone(), class_adj_target, Reduction::Auto).mul_scalar(optimization_need);
+            let class_loss = mse_loss
+                .forward(class_out.clone(), class_adj_target, Reduction::Auto)
+                .mul_scalar(optimization_need);
             let class_loss_full =
                 mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Auto);
             let class_loss_single: f32 = class_loss_full
@@ -428,10 +433,10 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let mut renderer = TuiMetricsRenderer::new(train_interrupter, None);
 
         let mut window_avg_loss_metric =
-            AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 250);
+            AvgMetric::new("W Avg Loss".to_owned(), "w_avg_loss".to_owned(), 1200);
 
         let mut window_correct_metric =
-            AvgMetric::new("W %".to_owned(), "w_correct_guess".to_owned(), 250);
+            AvgMetric::new("W %".to_owned(), "w_correct_guess".to_owned(), 1200);
 
         let mut window_correct_covid_metric = AvgMetric::new(
             "W % COVID".to_owned(),
@@ -451,10 +456,10 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             100,
         );
         let mut window_avg_iter =
-            AvgMetric::new("W Iter".to_owned(), "w_iter_number".to_owned(), 250);
+            AvgMetric::new("W Iter".to_owned(), "w_iter_number".to_owned(), 1200);
 
         let mut window_avg_loss_improvement =
-            AvgMetric::new("D_Loss / iter".to_owned(), "d_loss_iter".to_owned(), 250);
+            AvgMetric::new("D_Loss / iter".to_owned(), "d_loss_iter".to_owned(), 1200);
 
         let mut window_first_last_improvement = AvgMetric::new(
             "W F/L".to_owned(),
@@ -524,6 +529,15 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     stats.first_loss as f64 - stats.last_loss as f64,
                 );
 
+                let new_goal_metric = MetricState::Numeric(
+                    MetricEntry {
+                        name: "C".to_string(),
+                        formatted: "C".to_string(),
+                        serialize: "concentration_goal".to_string(),
+                    },
+                    self.adaptive_goal.current_goal as f64,
+                );
+
                 let new_window_avg_loss_metric =
                     window_avg_loss_metric.update(stats.avg_loss as f64);
                 let new_window_correct_guess_metric =
@@ -591,6 +605,7 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 renderer.update_train(new_avg_loss_metric);
                 renderer.update_train(new_window_avg_loss_metric);
                 renderer.update_train(new_first_last_metric);
+                renderer.update_train(new_goal_metric);
 
                 if let Some(w_correct) = new_window_correct_guess_metric {
                     renderer.update_train(w_correct);
@@ -632,6 +647,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             if epoch % 5 == 0 {
                 save::save_to_highest(&self.config.save_as, &model);
             }
+            let current_avg_iter = window_avg_iter.current_avg();
+            self.adaptive_goal.update_goal(current_avg_iter as f32);
         }
 
         model

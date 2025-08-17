@@ -8,14 +8,19 @@ goal_len = 400
 
 seq = iaa.Sequential([
     iaa.Fliplr(0.5),
+    iaa.Flipud(0.2),
     iaa.Affine(
         scale={"x": (0.9, 1.1), "y": (0.9, 1.1)},
         translate_percent={"x": (-0.05, 0.05), "y": (-0.05, 0.05)},
-        rotate=(-3, 3),
+        rotate=(-10, 10),
         shear=(-4, 4)
     ),
+    iaa.Rot90((1, 3)),
     iaa.Crop(px = (0, 16)),
-    iaa.Multiply((0.8, 1.2), per_channel = 0.4)
+    iaa.Multiply((0.8, 1.2), per_channel = 0.4),
+    iaa.Add((-20.0, 20.0), per_channel = 0.5),
+    iaa.BlendAlphaVerticalLinearGradient(iaa.AddToHue((-50, 50))),
+    iaa.BlendAlphaHorizontalLinearGradient(iaa.AddToHue((-50, 50)))
 ])
 
 def process_category(path):

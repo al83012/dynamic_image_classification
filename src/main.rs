@@ -31,6 +31,7 @@ pub mod metrics;
 pub mod model;
 pub mod save;
 pub mod train;
+pub mod adaptive_conc;
 
 fn main() {
     // let mut optim_data = OptimizerData::<MyAutodiffBackend> {
@@ -47,8 +48,8 @@ fn main() {
     //     "model_artifacts-rerun1",
     // );
 
-    display::display_inference();
-    // train();
+    // display::display_inference();
+    train();
 }
 
 fn train() {
@@ -80,7 +81,7 @@ fn train() {
     //     .load(artifact_path.into(), &device)
     //     .expect("Error decoding state from specified path");
 
-    let model_name = "combined_optimization_need";
+    let model_name = "adaptive_goal";
 
     let training_config = TrainingConfig::new(model_name.to_string());
 
