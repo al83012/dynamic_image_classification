@@ -9,7 +9,7 @@ use burn::{
     record::{FullPrecisionSettings, NamedMpkFileRecorder, Recorder},
     train::metric::Adaptor,
 };
-use data::{CovidDataLoader, DataLoader, SmokerDataLoader};
+use data::data_loaders::{CovidDataLoader, DataLoader};
 use log::LevelFilter;
 use log4rs::{
     append::file::FileAppender,
@@ -17,43 +17,19 @@ use log4rs::{
     encode::pattern::PatternEncoder,
     Config,
 };
-use model::{VisionModelConfig, VisionModelRecord};
+use model::model::VisionModelConfig;
 use save::{load_from_highest, save_to_new_highest};
-use train::{TrainingConfig, TrainingManager};
-pub mod pos_opt;
-pub mod modern_lstm;
-pub mod class;
+use train::{train::TrainingConfig, TrainingManager};
 pub mod data;
-pub mod display;
-pub mod image;
-pub mod infer;
-pub mod metrics;
 pub mod model;
 pub mod save;
 pub mod train;
-pub mod adaptive_conc;
+pub mod visualization;
+pub mod metric;
 
 fn main() {
-    // let mut optim_data = OptimizerData::<MyAutodiffBackend> {
-    //     class_optim: AdamConfig::new().init(),
-    //     pos_optim: AdamConfig::new().init(),
-    // };
-
-    // model = train_all::<MyAutodiffBackend>(
-    //     model,
-    //     &device,
-    //     &mut optim_data,
-    //     data_loader,
-    //     100,
-    //     "model_artifacts-rerun1",
-    // );
-
-    // display::display_inference();
-    train();
-}
-
-fn train() {
     if cfg!(feature = "debug_log") {
+        println!("Logging");
         let logfile = FileAppender::builder()
             .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
             .build("log/output.log")
@@ -67,21 +43,19 @@ fn train() {
         log4rs::init_config(config).unwrap();
     }
 
+    // display::display_inference();
+    train();
+}
+
+fn train() {
     log::info!("Hello, world!");
     type MyBackend = Wgpu<f32, i32>;
     type MyAutodiffBackend = Autodiff<MyBackend>;
 
     let device = Default::default();
 
-    // let recorder = NamedMpkFileRecorder::<FullPrecisionSettings>::default();
 
-    // let artifact_path = Path::new("model_artifacts/model_artifacts.mpk");
-
-    // let record = recorder
-    //     .load(artifact_path.into(), &device)
-    //     .expect("Error decoding state from specified path");
-
-    let model_name = "adaptive_goal";
+    let model_name = "adaptive_goal_shrunk_model";
 
     let training_config = TrainingConfig::new(model_name.to_string());
 

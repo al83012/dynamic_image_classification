@@ -1,19 +1,15 @@
 use burn::{backend::Wgpu, prelude::*};
 use nannou::{
-    color::*,
-    draw::properties::SetDimensions,
     geom::{self, rect, Padding, Rect},
     image::{GenericImageView, ImageBuffer},
     wgpu::{self, Texture},
     App, Draw, Frame,
 };
 
-use crate::{
-    image::image_as_tensor,
-    infer::{self, StepInfo},
-    model::{VisionModel, VisionModelConfig},
-    save::load_from_highest,
-};
+use crate::{data::image::image_as_tensor, model::{model::VisionModelConfig, VisionModel}, save::load_from_highest, visualization::infer};
+
+use super::infer::StepInfo;
+
 
 pub struct DisplayData<B: Backend> {
     pub steps: Vec<StepInfo<B>>,
@@ -38,11 +34,11 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
         .build()
         .unwrap();
 
-    let image_path = "covid/Covid19-dataset/test/Viral Pneumonia/0101.jpeg";
+    let image_path = "covid/Covid19-dataset/train/Viral Pneumonia/Gen-10.jpg";
 
     let device = Default::default();
 
-    let model_name = "combined_optimization_need";
+    let model_name = "adaptive_goal";
 
     let model :VisionModel<MyBackend> = VisionModelConfig::new(3).init(&device)/* .load_record(record) */;
     let model = load_from_highest(model_name, model, &device);
@@ -69,6 +65,7 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
         img_rect,
     }
 }
+
 
 pub fn view<B: Backend>(app: &App, model: &DisplayData<B>, frame: Frame) {
     let draw = app.draw();

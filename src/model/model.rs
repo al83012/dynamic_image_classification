@@ -9,7 +9,9 @@ use nn::{
 };
 use rand::Rng;
 
-use crate::modern_lstm::{StackedLstm, StackedLstmConfig};
+use crate::model::modern_lstm::{StackedLstm, StackedLstmConfig};
+
+use super::{PositioningData, VisionModelStepInput, VisionModelStepResult};
 
 #[derive(Module, Debug)]
 pub struct VisionModel<B: Backend> {
@@ -18,7 +20,6 @@ pub struct VisionModel<B: Backend> {
     conv_2: Conv2d<B>,
     dropout: Dropout,
     lstm: StackedLstm<B>,
-    // lstm: Lstm<B>,
     linear_pos: Linear<B>,
     linear_class: Linear<B>,
     activation: Relu,
@@ -28,7 +29,7 @@ pub struct VisionModel<B: Backend> {
 #[derive(Config)]
 pub struct VisionModelConfig {
     num_classes: usize,
-    #[config(default = "256")]
+    #[config(default = "128")]
     lstm_hidden_size: usize,
     #[config(default = "[3, 3]")]
     conv_1_kernel: [usize; 2],
@@ -40,9 +41,9 @@ pub struct VisionModelConfig {
     conv_1_kernel_count: usize,
     #[config(default = "16")]
     conv_2_kernel_count: usize,
-    #[config(default = "[10, 10]")]
+    #[config(default = "[8, 8]")]
     pool_out: [usize; 2],
-    #[config(default = "0.05")]
+    #[config(default = "0.2")]
     dropout: f64,
 }
 
@@ -75,7 +76,8 @@ impl VisionModelConfig {
             conv_2: Conv2dConfig::new([conv_1_out_channel, conv_2_out_channel], self.conv_2_kernel)
                 .init(device),
             dropout: Dropout { prob: self.dropout },
-            lstm: StackedLstmConfig::new(lstm_input_size, self.lstm_hidden_size, 3,0.1).init(device),
+            lstm: StackedLstmConfig::new(lstm_input_size, self.lstm_hidden_size, 2, 0.1)
+                .init(device),
             linear_pos: LinearConfig::new(self.lstm_hidden_size, positioning_data_size)
                 .init(device),
             linear_class: LinearConfig::new(self.lstm_hidden_size, self.num_classes).init(device),
@@ -83,22 +85,6 @@ impl VisionModelConfig {
             num_classes: self.num_classes,
         }
     }
-}
-
-#[derive(Clone)]
-pub struct PositioningData<B: Backend>(pub Tensor<B, 3>);
-
-pub struct VisionModelStepResult<B: Backend> {
-    pub current_classification: Tensor<B, 3>,
-    pub next_pos: PositioningData<B>,
-    pub next_lstm_state: Vec<LstmState<B, 2>>,
-}
-
-pub struct VisionModelStepInput<B: Backend> {
-    pub image_section: Tensor<B, 3>, // [Channels, Width, Height]
-    pub pos_data: PositioningData<B>,
-    pub lstm_state: Option<Vec<LstmState<B, 2>>>,
-    pub time: Tensor<B, 1>,
 }
 
 impl<B: Backend> VisionModel<B> {
@@ -128,7 +114,7 @@ impl<B: Backend> VisionModel<B> {
         let x: Tensor<B, 2> = x.flatten(1, 3); //[batch_size, image net out]
                                                //flattened_image]
         let squeezed_pos_data = pos_data.0.squeeze(0); // [batch_size, pos_data]
-        
+
         // Concat the flattened image and pos data (while keeping the 1-sized sequence and batch)
         let cat_vec = vec![x, squeezed_pos_data, input.time.unsqueeze()];
         let x = Tensor::cat(cat_vec, 1).unsqueeze();
@@ -146,50 +132,5 @@ impl<B: Backend> VisionModel<B> {
             next_pos: PositioningData(next_pos_data),
             next_lstm_state: next_state,
         }
-    }
-}
-
-impl<B: Backend> PositioningData<B> {
-    pub const SIZE: usize = 3;
-    pub fn from_params(
-        section_center: [f32; 2],
-        selection_coverage: f32,
-        device: &B::Device,
-    ) -> Self {
-        Self(
-            Tensor::<B, 1>::from_floats(
-                [section_center[0], section_center[1], selection_coverage],
-                device,
-            )
-            .unsqueeze_dims(&[0, 0]),
-        )
-    }
-    pub fn start(device: &B::Device) -> Self {
-        Self::from_params([0.0, 0.0], 1.0, device)
-    }
-    pub fn get_params_detach(&self) -> ([f32; 2], f32) {
-        let data = self.0.clone().detach().to_data();
-        let vec: Vec<f32> = data
-            .to_vec()
-            .expect("PositioningData should be able to be converted to Vec");
-        assert!(vec.len() == 3);
-        ([vec[0], vec[1]], vec[2])
-    }
-
-    pub fn norm_quality(&self) -> f32 {
-        let ([cx, cy], size) = self.get_params_detach();
-        let cx_norm = (cx.abs() - 2.0).max(0.0);
-        let cy_norm = (cy.abs() - 2.0).max(0.0);
-        let size_norm =
-            (size.abs() - 1.0).max(0.0) + if size.is_sign_negative() { 1.0 } else { 0.0 };
-        cx_norm + cy_norm + size_norm
-    }
-    pub fn random(device: &B::Device) -> Self {
-        let mut rng = rand::rng();
-        let cx = rng.random_range(-1.0..1.0) * 4.0;
-        let cy = rng.random_range(-1.0..1.0) * 4.0;
-        let size = rng.random_range(0.1..0.9);
-
-        Self::from_params([cx, cy], size, device)
     }
 }

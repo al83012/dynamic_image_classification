@@ -9,7 +9,8 @@ use burn::{
     record::{self, FullPrecisionSettings, NamedMpkFileRecorder, Recorder},
 };
 
-use crate::model::{VisionModel, VisionModelRecord};
+use crate::model::{VisionModel};
+use crate::model::VisionModelRecord;
 
 pub fn get_highest_version(version_of: &str) -> Option<usize> {
     let folder_path_str = format!("model_artifacts/{version_of}");

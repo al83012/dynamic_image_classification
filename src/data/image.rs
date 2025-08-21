@@ -1,12 +1,8 @@
 use burn::prelude::*;
-use log;
-use nannou::{
-    color::Rgb,
-    image::{DynamicImage, ImageBuffer},
-};
-use nn::pool::AdaptiveAvgPool2d;
+use nannou::
+    image::DynamicImage
+;
 
-use crate::data::ClassificationBatch;
 
 // Tensor[channels, x, y]
 pub const IMAGE_FOLDER: &str = "data";

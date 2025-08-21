@@ -6,7 +6,8 @@ use std::{
 use burn::{data::dataloader::batcher::Batcher, prelude::*};
 use rand::{seq::SliceRandom, thread_rng};
 
-use crate::{image::load_image, model::VisionModel};
+use crate::data::image::load_image;
+use crate::model::model::VisionModel;
 
 pub struct ClassificationBatch<B: Backend> {
     pub images: Tensor<B, 4>,

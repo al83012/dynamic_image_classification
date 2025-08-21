@@ -6,23 +6,22 @@ use burn::optim::{Adam, AdamConfig, GradientsAccumulator, GradientsParams, Optim
 use burn::prelude::*;
 use burn::tensor::activation::softmax;
 use burn::tensor::backend::AutodiffBackend;
-use burn::tensor::loss;
 use burn_train::metric::MetricEntry;
 use burn_train::renderer::tui::TuiMetricsRenderer;
 use burn_train::renderer::{self, MetricState, MetricsRenderer, TrainingProgress};
 use burn_train::TrainingInterrupter;
-use log::Level;
-use nannou::conrod_core::render;
 use nn::loss::{MseLoss, Reduction};
 use nn::LstmState;
 
-use crate::adaptive_conc::AdaptiveConcentrationGoal;
-use crate::data::{ClassificationItem, DataLoader};
-use crate::image::extract_section;
-use crate::metrics::AvgMetric;
+use crate::data::data_loaders::DataLoader;
+use crate::data::data_loaders::ClassificationItem;
+use crate::data::image::extract_section;
+use crate::metric::AvgMetric;
 use crate::model::{PositioningData, VisionModel, VisionModelStepInput};
-use crate::pos_opt::PosOptimizationStrategy;
 use crate::save;
+use crate::train::utils::{concentration, smoothstep, tensor_argmax};
+
+use super::{AdaptiveConcentrationGoal, PosOptimizationStrategy};
 
 #[derive(Debug, Clone, Copy)]
 pub struct StepStatistics {
@@ -230,8 +229,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             let concentration = concentration(squeezed_class.clone());
             // println!("Concentration: {concentration:.2}");
-            let concentration_limit =
-                self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
+            // let concentration_limit =
+            //     self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
             let can_finish = concentration > self.adaptive_goal.current_goal && i >= 1;
 
             // log::info!("After concentration calc");
@@ -239,26 +238,35 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             // println!("After argmax");
 
             // println!("Target: {class_adj_strength:.2}");
-            let class_adj_target = class_oh_target.clone() * class_adj_strength;
+            // let class_adj_target = class_oh_target.clone() * class_adj_strength;
+
+            let class_adj_target = adjusted_target(target, class_adj_strength, &self.device);
 
             // log::info!("Adj target: {class_adj_target:.2}");
 
-            let optimization_need = smoothstep(2.0 * (time_val - 0.5)) * 1.2 + 1.0;
+            let optimization_need = smoothstep(2.0 * (time_val - 0.5)) * 1.5 + 1.0;
             // let optimization_need = 1.0;
 
             // NOTE: Weighing the classification loss by an adjusted timestep in order to stress
             // that the model should not just reach the iteration limit
             let class_loss = mse_loss
-                .forward(class_out.clone(), class_adj_target, Reduction::Auto)
+                .forward(class_out.clone(), class_adj_target.clone(), Reduction::Auto)
                 .mul_scalar(optimization_need);
             let class_loss_full =
-                mse_loss.forward(class_out, class_oh_target.clone(), Reduction::Auto);
+                mse_loss.forward(class_out.clone(), class_oh_target.clone(), Reduction::Auto);
             let class_loss_single: f32 = class_loss_full
                 .clone()
                 .detach()
                 .into_data()
                 .to_vec()
                 .unwrap()[0];
+
+            
+
+            log::info!("Iter: {i}");
+            log::info!("Target: {class_adj_target:.2}");
+            log::info!("Out: {class_out:.2}");
+            log::info!("Loss: {class_loss}:.2");
 
             if i == 0 {
                 first_loss = class_loss_single;
@@ -655,22 +663,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
     }
 }
 
-pub fn concentration<B: Backend>(tensor: Tensor<B, 1>) -> f32 {
-    let soft = burn::tensor::activation::softmax(tensor, 0);
-    let (_, highest) = tensor_argmax(soft);
-    highest
-}
 
-pub fn tensor_argmax<B: Backend>(t: Tensor<B, 1>) -> (usize, f32) {
-    let vec = t.into_data().to_vec::<f32>().unwrap();
-    vec.iter()
-        .enumerate()
-        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-        .map(|(a, b)| (a, *b))
-        .unwrap()
-}
+fn adjusted_target<B: Backend>(target: usize, class_adj_strength: f32, device: &B::Device) -> Tensor<B, 3> {
+    let opposite = (1.0 - class_adj_strength) / 2.0;
 
-fn smoothstep(val: f32) -> f32 {
-    let val = val.clamp(0.0, 1.0);
-    val * val * (3.0 - 2.0 * val)
+    let mut target_arr = [opposite; 3];
+    target_arr[target] = class_adj_strength;
+
+    Tensor::from_data(TensorData::from([[target_arr]]), device)
 }

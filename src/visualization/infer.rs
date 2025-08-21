@@ -1,8 +1,5 @@
 use crate::{
-    data::ClassificationItem,
-    image::{extract_section, load_image},
-    model::{PositioningData, VisionModel, VisionModelStepInput, VisionModelStepResult},
-    train::concentration,
+    data::image::{extract_section, load_image}, model::{PositioningData, VisionModel, VisionModelStepInput, VisionModelStepResult}, train::utils::concentration
 };
 use burn::prelude::*;
 use burn_train::ClassificationOutput;
@@ -41,7 +38,7 @@ pub fn steps_to_finish<B: Backend>(
             image_section,
             pos_data: pos_data.clone(),
             lstm_state,
-            time
+            time,
         };
 
         let step_out = model.forward(step_in);
