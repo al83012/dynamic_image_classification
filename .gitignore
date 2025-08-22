@@ -3,5 +3,6 @@ log/
 model_artifacts/
 *.log
 *.mpk
+captures/
 
 

@@ -1,26 +1,30 @@
+use std::fs::{self, File, FileType};
+
 use burn::{backend::Wgpu, prelude::*};
 use nannou::{
-    color::{DARKBLUE, GREY},
-    draw::theme::Color,
-    geom::{self, rect, Padding, Rect},
-    image::{GenericImageView, ImageBuffer},
-    ui::color::DARK_GREY,
-    wgpu::{self, Texture},
-    App, Draw, Frame,
+    app::App,
+    color::DARKBLUE,
+    geom::{self, Rect},
+    image::{self, gif::GifEncoder, GenericImageView},
+    wgpu::Texture,
+    Frame,
 };
 
 use crate::{
     data::image::image_as_tensor,
     model::{model::VisionModelConfig, VisionModel},
     save::load_from_highest,
-    train::utils::smoothstep,
     visualization::infer,
 };
+
+use nannou::prelude::*;
 
 use super::{
     infer::StepInfo,
     utils::{rel_rect_from_pos, remap_t, smooth_remap_t},
 };
+
+const FRAME_PER_STEP: usize = 20;
 
 pub struct DisplayData<B: Backend> {
     pub steps: Vec<StepInfo<B>>,
@@ -36,6 +40,8 @@ pub fn display_inference() {
 
 // Path rel to data/ folder
 pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
+    // let gif_file = File::create("./example.gif").expect("Error creating file for .gif");
+    // let gif_encoder = GifEncoder::new(gif_file);
     type MyBackend = Wgpu<f32, i32>;
 
     app.new_window()
@@ -54,7 +60,7 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
     let model :VisionModel<MyBackend> = VisionModelConfig::new(3).init(&device)/* .load_record(record) */;
     let model = load_from_highest(model_name, model, &device);
 
-    let steps = infer::steps_to_finish(image_path, &model, &device, 200, 0.8);
+    let steps = infer::steps_to_finish(image_path, &model, &device, 20, 0.7);
 
     let image = nannou::image::open(format!("data/{image_path}")).expect("Failed to load image");
 
@@ -77,7 +83,7 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
     }
 }
 
-pub fn view<B: Backend>(app: &App, model: &DisplayData<B>, frame: Frame) {
+pub fn view<B: Backend>(app: &nannou::app::App, model: &DisplayData<B>, frame: nannou::Frame) {
     let draw = app.draw();
     draw.background()
         .rgb(36.0 / 255.0, 41.0 / 255.0, 46.0 / 255.0);
@@ -86,6 +92,65 @@ pub fn view<B: Backend>(app: &App, model: &DisplayData<B>, frame: Frame) {
 
     draw_image(app, model, &frame);
     draw_panel(app, model, &frame);
+
+    let frame_id = frame.nth();
+
+    app.main_window()
+        .capture_frame(format!("./captures/{frame_id}.png"));
+
+    println!("{frame_id}");
+
+    if frame_id >= (model.steps.len() - 1) as u64 * FRAME_PER_STEP as u64 - 1 {
+        // Apparently doesn't work in that version
+        // app.quit();
+        collect_frames();
+    }
+}
+
+fn collect_frames() {
+    let captures = std::fs::read_dir("./captures").expect("Error reading dir");
+    let mut files = captures
+        .into_iter()
+        .filter_map(|f| f.ok())
+        .filter_map(|f| {
+            if let Ok(ft) = f.file_type() {
+                if ft.is_file() {
+                    Some(f)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+
+    files.sort_by_key(|f| {
+        let name = f
+            .file_name()
+            .to_string_lossy()
+            .to_string()
+            .replace(".png", "");
+        name.parse::<usize>().expect("Error parsing filename")
+    });
+
+    let frames = files.into_iter().map(|f| {
+        let image = image::open(f.path()).expect("Error opening capture image");
+        let image_buffer = image.as_rgba8().expect("Can't represent as rgba");
+        nannou::image::Frame::new(image_buffer.clone())
+    });
+
+
+
+    let gif = fs::File::create("./capture.gif").expect("Error creating file");
+    let mut gif_encoder = GifEncoder::new(gif);
+    gif_encoder
+        .encode_frames(frames)
+        .expect("Error while encoding");
+
+    std::fs::remove_dir_all("./captures");
+
+    std::process::exit(0)
 }
 
 pub fn draw_image<B: Backend>(app: &App, model: &DisplayData<B>, frame: &Frame) {
@@ -103,7 +168,7 @@ pub fn draw_panel<B: Backend>(app: &App, model: &DisplayData<B>, frame: &Frame) 
     let info_rect = Rect::from_w_h(panel_rect.w(), 50.0)
         .align_top_of(panel_rect)
         .align_middle_x_of(panel_rect);
-    let time = app.time;
+    let time = frame.nth() as f32 / FRAME_PER_STEP as f32;
     let output_time = smooth_remap_t(0.4, 1.0, time);
     let focus_time = smooth_remap_t(0.0, 0.5, time);
     draw.text(&format!("Time: {time:.2}"))
@@ -174,11 +239,7 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
     let current_tensor: Vec<f32> = if (0.5 - step_t).abs() > 0.5 - 1e-2 {
         // println!("Full value");
 
-        let id = if step_t > 0.5 {
-            full_idx + 1
-        } else {
-            full_idx
-        };
+        let id = if step_t > 0.5 { full_idx + 1 } else { full_idx };
 
         let tensor = model.steps[id].class_out.clone();
 
