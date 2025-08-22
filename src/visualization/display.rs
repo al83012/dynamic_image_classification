@@ -1,15 +1,26 @@
 use burn::{backend::Wgpu, prelude::*};
 use nannou::{
+    color::{DARKBLUE, GREY},
+    draw::theme::Color,
     geom::{self, rect, Padding, Rect},
     image::{GenericImageView, ImageBuffer},
+    ui::color::DARK_GREY,
     wgpu::{self, Texture},
     App, Draw, Frame,
 };
 
-use crate::{data::image::image_as_tensor, model::{model::VisionModelConfig, VisionModel}, save::load_from_highest, visualization::infer};
+use crate::{
+    data::image::image_as_tensor,
+    model::{model::VisionModelConfig, VisionModel},
+    save::load_from_highest,
+    train::utils::smoothstep,
+    visualization::infer,
+};
 
-use super::infer::StepInfo;
-
+use super::{
+    infer::StepInfo,
+    utils::{rel_rect_from_pos, remap_t, smooth_remap_t},
+};
 
 pub struct DisplayData<B: Backend> {
     pub steps: Vec<StepInfo<B>>,
@@ -38,7 +49,7 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
 
     let device = Default::default();
 
-    let model_name = "adaptive_goal";
+    let model_name = "adaptive_goal_shrunk_model";
 
     let model :VisionModel<MyBackend> = VisionModelConfig::new(3).init(&device)/* .load_record(record) */;
     let model = load_from_highest(model_name, model, &device);
@@ -66,11 +77,10 @@ pub fn display_data_model(app: &App) -> DisplayData<Wgpu<f32, i32>> {
     }
 }
 
-
 pub fn view<B: Backend>(app: &App, model: &DisplayData<B>, frame: Frame) {
     let draw = app.draw();
     draw.background()
-        .rgb(31.0 / 255.0, 15.0 / 255.0, 83.0 / 255.0);
+        .rgb(36.0 / 255.0, 41.0 / 255.0, 46.0 / 255.0);
     // draw.text(&format!("{}", model.steps.len()));
     draw.to_frame(app, &frame).unwrap();
 
@@ -93,13 +103,16 @@ pub fn draw_panel<B: Backend>(app: &App, model: &DisplayData<B>, frame: &Frame) 
     let info_rect = Rect::from_w_h(panel_rect.w(), 50.0)
         .align_top_of(panel_rect)
         .align_middle_x_of(panel_rect);
-    let time = app.time * 2.0;
+    let time = app.time;
+    let output_time = smooth_remap_t(0.4, 1.0, time);
+    let focus_time = smooth_remap_t(0.0, 0.5, time);
     draw.text(&format!("Time: {time:.2}"))
         .wh(info_rect.wh())
         .xy(info_rect.xy())
         .rgb8(62, 128, 224);
     draw.to_frame(app, frame).unwrap();
-    draw_outputs(app, model, time, frame);
+    draw_focus(app, frame, model, focus_time);
+    draw_outputs(app, model, output_time, frame);
 }
 
 pub fn panel_rect(app: &App) -> Rect {
@@ -156,31 +169,30 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
 
     let step_t = t.fract();
 
-    let eased_t = nannou::ease::cubic::ease_in_out(step_t, 0.0, 1.0, 1.0);
-    println!("At start T = {t}");
+    // println!("At start T = {t}");
 
-    let current_tensor: Vec<f32> = if eased_t.abs_sub(step_t) < 1e-2 {
-        println!("Full value");
-        // Basically at the full value;
-        let idx = if eased_t > 0.5 {
+    let current_tensor: Vec<f32> = if (0.5 - step_t).abs() > 0.5 - 1e-2 {
+        // println!("Full value");
+
+        let id = if step_t > 0.5 {
             full_idx + 1
         } else {
             full_idx
         };
 
-        let tensor = model.steps[idx].class_out.clone();
+        let tensor = model.steps[id].class_out.clone();
 
-        println!("Tensor: {tensor:#?}");
+        // println!("Tensor: {tensor:#?}");
 
         let tensor: Tensor<B, 1> = tensor.squeeze_dims(&[0, 1]);
 
         let tensor = burn::tensor::activation::softmax(tensor, 0);
 
-        println!("After Full value");
+        // println!("After Full value");
 
         tensor.to_data().to_vec().expect("Failed collecting to vec")
     } else {
-        println!("Lerped value");
+        // println!("Lerped value");
         let from: Tensor<B, 1> = model.steps[full_idx]
             .class_out
             .clone()
@@ -193,8 +205,6 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
         let from = burn::tensor::activation::softmax(from, 0);
         let to = burn::tensor::activation::softmax(to, 0);
 
-        println!("After Lerped value");
-
         from.to_data()
             .to_vec::<f32>()
             .expect("Failed collecting to vec")
@@ -204,7 +214,7 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
                     .to_vec::<f32>()
                     .expect("Failed collecting to vec"),
             )
-            .map(|(a, b)| a * (1.0 - eased_t) + b * eased_t)
+            .map(|(a, b)| a * (1.0 - step_t) + b * step_t)
             .collect()
     };
 
@@ -233,7 +243,7 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
         draw.rect()
             .wh(val_rect.wh())
             .xy(val_rect.xy())
-            .rgb8(81, 89, 173);
+            .rgb8(48, 54, 60);
 
         let text_w = val_rect.w().max(40.0);
         let text_h = val_rect.h();
@@ -252,4 +262,28 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
     }
 
     draw.to_frame(app, frame).unwrap();
+}
+
+pub fn draw_focus<B: Backend>(app: &App, frame: &Frame, model: &DisplayData<B>, t: f32) {
+    let img_rect = model.img_rect;
+
+    let from_idx = t.floor() as usize;
+    let fract = t.fract();
+
+    let from_rect = rel_rect_from_pos(&model.steps.get(from_idx).unwrap().pos_in);
+    let to_rect = rel_rect_from_pos(&model.steps.get(from_idx).unwrap().pos_out);
+
+    let rect = from_rect.lerp(&to_rect, fract);
+    let in_context = rect.in_context(img_rect);
+
+    let draw = app.draw();
+
+    draw.rect()
+        .wh(in_context.wh())
+        .xy(in_context.xy())
+        .rgba8(150, 150, 150, 10)
+        .stroke_weight(1.0)
+        .stroke(DARKBLUE);
+
+    draw.to_frame(app, frame);
 }

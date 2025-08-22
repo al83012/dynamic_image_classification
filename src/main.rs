@@ -20,6 +20,7 @@ use log4rs::{
 use model::model::VisionModelConfig;
 use save::{load_from_highest, save_to_new_highest};
 use train::{train::TrainingConfig, TrainingManager};
+use visualization::display_inference;
 pub mod data;
 pub mod model;
 pub mod save;
@@ -43,8 +44,8 @@ fn main() {
         log4rs::init_config(config).unwrap();
     }
 
-    // display::display_inference();
-    train();
+    display_inference();
+    // train();
 }
 
 fn train() {
