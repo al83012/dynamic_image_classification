@@ -1,5 +1,9 @@
 ## Image classification using Rust's `burn`-crate
-![example_pneumonia](capture.mp4)
+
+
+https://github.com/user-attachments/assets/4f8fb0bc-8aeb-4235-a20e-76b192014883
+
+
 ### Goal
 This project does not try to be the best possible solution for the problem of image classification. Instead I just wanted to try out a more dynamic approach to image classification while also improving my skills with rust and the `burn`-crate.
 ### Technique
