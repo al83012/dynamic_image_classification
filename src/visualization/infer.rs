@@ -1,8 +1,9 @@
 use crate::{
-    data::image::{extract_section, load_image}, model::{PositioningData, VisionModel, VisionModelStepInput, VisionModelStepResult}, train::utils::concentration
+    data::image::{extract_section, load_image},
+    model::{PositioningData, VisionModel, VisionModelStepInput, VisionModelStepResult},
+    train::utils::concentration,
 };
 use burn::prelude::*;
-use burn_train::ClassificationOutput;
 use nn::LstmState;
 
 fn single_step<B: Backend>(
@@ -60,16 +61,12 @@ pub fn steps_to_finish<B: Backend>(
 
         let squeezed_class = class_out.clone().detach().squeeze_dims(&[0, 1]);
 
-        let output_vec: Vec<f32> = class_out
-            .clone()
-            .detach()
-            .squeeze_dims::<1>(&[0, 1])
-            .to_data()
-            .to_vec()
-            .expect("Error unwrapping output");
-
         let concentration = concentration(squeezed_class.clone());
         let can_finish = concentration > concentration_limit && i >= 1;
+
+        if can_finish {
+            break;
+        }
     }
 
     result

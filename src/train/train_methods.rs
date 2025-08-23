@@ -1,4 +1,3 @@
-use burn::backend::autodiff::grads::Gradients;
 use burn::config::Config;
 use burn::data::dataloader::Progress;
 use burn::optim::adaptor::OptimizerAdaptor;
@@ -8,13 +7,13 @@ use burn::tensor::activation::softmax;
 use burn::tensor::backend::AutodiffBackend;
 use burn_train::metric::MetricEntry;
 use burn_train::renderer::tui::TuiMetricsRenderer;
-use burn_train::renderer::{self, MetricState, MetricsRenderer, TrainingProgress};
+use burn_train::renderer::{MetricState, MetricsRenderer, TrainingProgress};
 use burn_train::TrainingInterrupter;
 use nn::loss::{MseLoss, Reduction};
 use nn::LstmState;
 
-use crate::data::data_loaders::DataLoader;
 use crate::data::data_loaders::ClassificationItem;
+use crate::data::data_loaders::DataLoader;
 use crate::data::image::extract_section;
 use crate::metric::AvgMetric;
 use crate::model::{PositioningData, VisionModel, VisionModelStepInput};
@@ -107,11 +106,6 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         let image_tensor = data.image;
         let target = data.classification as usize;
 
-        // let idx_tensor: Tensor<B, 1, Int> = Tensor::from_data([target], device);
-        // let class_oh_target_int: Tensor<B, 1, Int> = idx_tensor.one_hot(model.num_classes);
-        // let class_oh_target: Tensor<B, 3> = class_oh_target_int.float().unsqueeze_dims(&[0, 0]);
-        // let class_oh_target_vec: Vec<f32> = class_oh_target.to_data().to_vec().unwrap();
-
         let mut class_oh_vec = vec![0.0; model.num_classes];
         class_oh_vec[target] = 1.0;
         let class_oh_target: Tensor<B, 3> =
@@ -120,16 +114,10 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         self.pos_opt.new_step(class_oh_target.clone());
 
-        // println!("Extracted class data");
-
         let mut pos_data = PositioningData::<B>::start(&self.device);
         let mut lstm_state: Option<Vec<LstmState<B, 2>>> = None;
 
-        // let mut pos_out_dummy_diff_acc: Tensor<B, 1> = Tensor::from_data([0.0], &self.device);
-
         let mse_loss = MseLoss::new();
-
-        // let mut acc_reward = 0.0;
 
         let mut current_iter = 0;
 
@@ -146,33 +134,16 @@ impl<B: AutodiffBackend> TrainingManager<B> {
         #[cfg(not(feature = "no_class_proc"))]
         let mut class_grad_accum = GradientsAccumulator::new();
 
-        // #[cfg(not(feature = "no_pos_proc"))]
-        // let mut pos_grad_accum = GradientsAccumulator::new();
-
-        // let mut previous_loss: Tensor<B, 1> =
-        //     Tensor::from_data(TensorData::from([0.0]), &self.device);
-
-        // let mut class_improvement_grad_accum = GradientsAccumulator::new();
-
         let mut aggregate_loss_improvement: f32 = 0.0;
 
-        // println!("Setup for iteration");
-        // log::info!("Setup for iteration");
-
-        // log::info!("New item");
-
         for i in 0..self.config.max_iter_count {
-            // log::info!("Step: {i}");
             let time_val = i as f32 / self.config.max_iter_count as f32;
 
             let class_adj_strength = smoothstep(time_val * 3.0) * 2.0 / 3.0 + 1.0 / 3.0;
             let time =
                 Tensor::<B, 1>::from_data(TensorData::from([class_adj_strength]), &self.device);
-            // log::info!("Iteration Start [{i}]");
             current_iter = i;
-            // println!("Iter[{current_iter:?}]");
             let ([cx, cy], rel_size) = pos_data.get_params_detach();
-            // log::info!("After pos_data_unpacking");
             let image_section = extract_section(image_tensor.clone(), cx, cy, rel_size);
             let step_in = VisionModelStepInput {
                 image_section,
@@ -181,14 +152,8 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 time,
             };
 
-            // log::info!("Loaded input");
-
-            // println!("Before fwd");
             let step_out = model.forward(step_in);
 
-            // log::info!("Did forward");
-
-            // println!("After fwd");
             lstm_state = Some(step_out.next_lstm_state);
 
             let class_out = softmax(step_out.current_classification, 2);
@@ -203,8 +168,6 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 pos_data = PositioningData(pos_out.clone().detach());
             }
 
-            // log::info!("After repackaging pos data");
-
             let norm_quality = pos_data.norm_quality().atan().clamp(0.0, 1.0);
 
             avg_norm_quality += norm_quality;
@@ -215,37 +178,14 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                     .accumulate_substep(class_out.clone(), new_pos_data);
             }
 
-            // let output_vec: Vec<f32> = class_out
-            //     .clone()
-            //     .detach()
-            //     .squeeze_dims::<1>(&[0, 1])
-            //     .to_data()
-            //     .to_vec()
-            //     .expect("Error unwrapping output");
-
-            // assert_eq!(output_vec.len(), 2);
-
             let squeezed_class = class_out.clone().detach().squeeze_dims(&[0, 1]);
 
             let concentration = concentration(squeezed_class.clone());
-            // println!("Concentration: {concentration:.2}");
-            // let concentration_limit =
-            //     self.config.certainty_slope.0 * (1.0 - t) + self.config.certainty_slope.1 * (t);
             let can_finish = concentration > self.adaptive_goal.current_goal && i >= 1;
-
-            // log::info!("After concentration calc");
-
-            // println!("After argmax");
-
-            // println!("Target: {class_adj_strength:.2}");
-            // let class_adj_target = class_oh_target.clone() * class_adj_strength;
 
             let class_adj_target = adjusted_target(target, class_adj_strength, &self.device);
 
-            // log::info!("Adj target: {class_adj_target:.2}");
-
             let optimization_need = smoothstep(2.0 * (time_val - 0.5)) * 1.5 + 1.0;
-            // let optimization_need = 1.0;
 
             // NOTE: Weighing the classification loss by an adjusted timestep in order to stress
             // that the model should not just reach the iteration limit
@@ -261,8 +201,6 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 .to_vec()
                 .unwrap()[0];
 
-            
-
             log::info!("Iter: {i}");
             log::info!("Target: {class_adj_target:.2}");
             log::info!("Out: {class_out:.2}");
@@ -274,16 +212,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
             aggregate_loss += class_loss_single;
 
-            // println!("After loss");
-
             #[cfg(not(feature = "no_class_proc"))]
             {
                 let class_grad = class_loss.clone().backward();
                 let class_grad_params = GradientsParams::from_grads(class_grad, &model);
                 class_grad_accum.accumulate(&model, class_grad_params);
             }
-
-            // log::info!("did loss and gradients");
 
             // NOTE: Recently deactivated
             // let pos_out_dummy_diff = pos_out.clone().mean();
@@ -297,40 +231,12 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 }
             }
 
-            if i > 1 {
-                // The lower, the better the model is performing
-                // Or rather: negative is good
-                //
-                // NOTE: Recently deactivated
-                // let loss_change = class_loss_full.clone() - previous_loss.clone();
-                // previous_loss = class_loss_full.clone();
-                // let loss_change_f = loss_change.to_data().to_vec::<f32>().unwrap()[0];
-                // aggregate_loss_improvement -= loss_change_f;
-
-                // let pos_grad = pos_out.mul_scalar(-loss_change).backward();
-                // let pos_grad_params = GradientsParams::from_grads(pos_grad, &model);
-                // pos_grad_accum.accumulate(&model, pos_grad_params);
-
-                // let grads = GradientsParams::from_grads((-loss_change).backward(), &model);
-
-                // class_improvement_grad_accum.accumulate(&model, grads);
-
-                // self.gradient_accum.accumulate(&model, grads);
-            }
-
-            // log::info!("Concentration: {concentration:.2}");
-            // log::info!("PredClass: {squeezed_class:.2}");
-
             if (can_finish && i + 1 >= 2) || i + 1 == self.config.max_iter_count {
                 let (highest_class, _) = tensor_argmax(squeezed_class);
                 last_guess = highest_class;
-                last_loss = //class_loss.detach().to_data().to_vec().unwrap()[0];
-                    class_loss_single;
-                // acc_reward -= class_loss_single;
+                last_loss = class_loss_single;
                 break;
             }
-
-            // acc_reward += class_loss_single;
         }
 
         //NOTE: This needs to be reactivated later
@@ -340,56 +246,17 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             model = class_optim.step(adj_class_lr, model, class_grad_accum.grads());
         }
 
-        // log::info!("Passed iterations");
-
         avg_norm_quality /= (current_iter + 1) as f32;
 
         aggregate_loss /= (current_iter + 1) as f32;
 
         let avg_loss_improvement = aggregate_loss_improvement / (current_iter as f32).max(1.0);
 
-        // acc_reward += if correct_output { 4.0 } else { -3.0 };
-
-        // if last_loss > aggregate_loss {
-        //     acc_reward += (last_loss - aggregate_loss) * 10.0 + 1.5;
-        // }
-
         let time_needed = (current_iter + 1) as f32 / self.config.max_iter_count as f32;
-
-        // println!("Time: {time_needed:.2}, right = {correct_output}");
-
-        // If the answer is correct, it is better if the time is longer. If the answer is wrong, it is
-        // better to see that only a short time was taken
-        // let time_goal = if correct_output {
-        //     1.0 - time_needed
-        // } else {
-        //     time_needed
-        // };
-
-        // let total_reward = acc_reward * time_goal - last_loss * 10.0 * (1.0 - time_goal) - aggregate_loss * 5.0 * (1.0 - time_goal) + 3.0;
-
-        // let avg_improvement_loss = aggregate_loss_improvement / (current_iter  + 1) as f32;
 
         let total_loss = (last_loss - aggregate_loss) * self.config.iter_improvement_weight
             + time_needed * time_needed * self.config.iter_time_weight
             + avg_norm_quality * self.config.norm_quality_weight;
-
-        // let total_loss = last_loss
-        //     + (last_loss - aggregate_loss) * self.config.iter_improvement_weight
-        //     + time_needed * self.config.iter_time_weight + 10.0;
-
-        // let total_loss = if last_loss > aggregate_loss {
-        //     if last_loss < 0.1 {
-        //         0.0
-        //     } else {
-        //         -1.0
-        //     }
-        // } else {
-        //     1.0
-        // };
-        // - 1.0
-        // + time_needed * time_needed * self.config.iter_time_weight
-        // + avg_norm_quality * self.config.norm_quality_weight;
 
         #[cfg(not(feature = "no_pos_proc"))]
         {
@@ -397,26 +264,6 @@ impl<B: AutodiffBackend> TrainingManager<B> {
             model = pos_optim.step(adj_pos_lr, model, grads);
         }
 
-        // NOTE: Recently deactivated
-        // let pos_out_dummy_diff_mean = pos_out_dummy_diff_acc.mean();
-        // let pos_dummy_loss = pos_out_dummy_diff_mean.mul_scalar(-total_loss);
-        // let pos_dummy_grad = pos_dummy_loss.backward();
-
-        // #[cfg(not(feature = "no_pos_proc"))]
-        // let gradients = pos_grad_accum.grads();
-
-        // NOTE: Recently deactivated
-        // let pos_dummy_grad_params = GradientsParams::from_grads(pos_dummy_grad, &model);
-        // self.gradient_accum
-        //     .accumulate(&model, pos_dummy_grad_params);
-
-        // model = pos_optim.step(adj_pos_lr, model, pos_dummy_grad_params * total_loss);
-
-        // model = pos_optim.step(adj_pos_lr, model, pos_grad_accum.grads());
-
-        // model = pos_optim.step(adj_pos_lr, model, class_improvement_grad_accum.grads());
-
-        // log::info!("Did full train for image");
         (
             model,
             StepStatistics {
@@ -477,19 +324,13 @@ impl<B: AutodiffBackend> TrainingManager<B> {
 
         save::save_to_new_highest(&self.config.save_as, &model);
 
-        // println!("loading training folder");
-
         for epoch in 0..self.config.epochs {
-            // println!("processing entries");
             let t = epoch as f32 / self.config.epochs as f32;
             for i in 0..data_loader.len() {
                 let training_input = data_loader.next(&self.device);
 
-                // println!("Loading {file_name}");
-                // log::info!("Before step (file = {i}, epoch = {i})");
                 let (model_out, stats) = self.train(training_input, model, t);
 
-                // log::info!("After step (file = {i}, epoch = {epoch})");
                 model = model_out;
 
                 let new_iter_metric = MetricState::Numeric(
@@ -627,15 +468,6 @@ impl<B: AutodiffBackend> TrainingManager<B> {
                 };
                 renderer.render_train(training_progress);
 
-                // println!("{stats:#?}");
-
-                // if i % 50 == 0 {
-                //     create_artifact_dir("model_artifacts");
-                //     model
-                //         .clone()
-                //         .save_file("model_artifacts", &CompactRecorder::new());
-                // }
-
                 //NOTE: OG
                 #[cfg(not(feature = "no_pos_proc"))]
                 {
@@ -663,8 +495,11 @@ impl<B: AutodiffBackend> TrainingManager<B> {
     }
 }
 
-
-fn adjusted_target<B: Backend>(target: usize, class_adj_strength: f32, device: &B::Device) -> Tensor<B, 3> {
+fn adjusted_target<B: Backend>(
+    target: usize,
+    class_adj_strength: f32,
+    device: &B::Device,
+) -> Tensor<B, 3> {
     let opposite = (1.0 - class_adj_strength) / 2.0;
 
     let mut target_arr = [opposite; 3];

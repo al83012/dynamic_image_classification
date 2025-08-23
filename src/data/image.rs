@@ -1,8 +1,5 @@
 use burn::prelude::*;
-use nannou::
-    image::DynamicImage
-;
-
+use nannou::image::DynamicImage;
 
 // Tensor[channels, x, y]
 pub const IMAGE_FOLDER: &str = "data";
@@ -24,7 +21,6 @@ pub fn image_as_tensor<B: Backend>(image: &DynamicImage, device: &B::Device) -> 
     let image_shape = [3, w as usize, h as usize];
     Tensor::from_data(TensorData::new(arr, image_shape), device)
 }
-
 
 pub fn extract_section<B: Backend>(
     image: Tensor<B, 3>,
@@ -55,28 +51,15 @@ pub fn extract_section<B: Backend>(
         (px - section_width / 2, px + section_width / 2)
     };
 
-    // log::info!("py = {py}, section_height = {section_height}, height = {h}");
-
     let (y0, y1) = if py < section_height / 2 {
-        // Ends in the negative
         (0, section_height)
     } else if py + section_height / 2 > h - 1 {
-        // Out of bounds
-
-        // log::info!("Pos out of bounds");
         (h - 1 - section_height, h - 1)
     } else {
-        // log::info!("Valid");
         (py - section_height / 2, py + section_height / 2)
     };
 
-    // log::info!("SHAPE: {:?}", image.shape());
-
-    // log::info!("[{x0}..{x1}, {y0}..{y1}]");
-
     let slice = image.slice([0..3, x0..x1, y0..y1]);
-
-    // log::info!("Made it");
 
     slice
 }

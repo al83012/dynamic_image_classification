@@ -1,14 +1,6 @@
 #![recursion_limit = "512"]
 
-use std::path::Path;
-
-use burn::{
-    backend::{Autodiff, Wgpu},
-    module::Module,
-    optim::{adaptor::OptimizerAdaptor, Adam, AdamConfig},
-    record::{FullPrecisionSettings, NamedMpkFileRecorder, Recorder},
-    train::metric::Adaptor,
-};
+use burn::backend::{Autodiff, Wgpu};
 use data::data_loaders::{CovidDataLoader, DataLoader};
 use log::LevelFilter;
 use log4rs::{
@@ -19,14 +11,14 @@ use log4rs::{
 };
 use model::model::VisionModelConfig;
 use save::{load_from_highest, save_to_new_highest};
-use train::{train::TrainingConfig, TrainingManager};
+use train::{train_methods::TrainingConfig, TrainingManager};
 use visualization::display_inference;
 pub mod data;
+pub mod metric;
 pub mod model;
 pub mod save;
 pub mod train;
 pub mod visualization;
-pub mod metric;
 
 fn main() {
     if cfg!(feature = "debug_log") {
@@ -44,8 +36,12 @@ fn main() {
         log4rs::init_config(config).unwrap();
     }
 
+    //NOTE: Activate the desired action
+
+    #[cfg(feature = "train")]
+    train();
+    #[cfg(feature = "display_inference")]
     display_inference();
-    // train();
 }
 
 fn train() {
@@ -54,7 +50,6 @@ fn train() {
     type MyAutodiffBackend = Autodiff<MyBackend>;
 
     let device = Default::default();
-
 
     let model_name = "adaptive_goal_shrunk_model";
 
@@ -69,4 +64,5 @@ fn train() {
     let data_loader = CovidDataLoader::new_and_assert(&model);
 
     let model = training_manager.train_all(model, data_loader);
+    save_to_new_highest(model_name, &model);
 }

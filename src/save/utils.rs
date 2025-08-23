@@ -6,16 +6,15 @@ use std::{
 use burn::{
     module::Module,
     prelude::Backend,
-    record::{self, FullPrecisionSettings, NamedMpkFileRecorder, Recorder},
+    record::{FullPrecisionSettings, NamedMpkFileRecorder, Recorder},
 };
 
-use crate::model::{VisionModel};
-use crate::model::VisionModelRecord;
+use crate::model::VisionModel;
 
 pub fn get_highest_version(version_of: &str) -> Option<usize> {
     let folder_path_str = format!("model_artifacts/{version_of}");
     let folder_path = Path::new(&folder_path_str);
-    create_dir_all(folder_path);
+    create_dir_all(folder_path).expect("Unable to create folder");
 
     let entries = fs::read_dir(folder_path)
         .expect("IO Error")
@@ -42,7 +41,7 @@ pub fn save_to_highest<B: Backend>(version_of: &str, model: &VisionModel<B>) {
     model.clone().save_file(
         file_path_str,
         &NamedMpkFileRecorder::<FullPrecisionSettings>::default(),
-    );
+    ).expect("Unable to save file");
 }
 
 pub fn load_from_highest<B: Backend>(
@@ -63,7 +62,7 @@ pub fn load_from_highest<B: Backend>(
     let file_path = PathBuf::from(file_path_str);
 
     let record = NamedMpkFileRecorder::<FullPrecisionSettings>::default()
-        .load(file_path.into(), device)
+        .load(file_path, device)
         .expect("Error loading model");
 
     model.load_record(record)
@@ -77,5 +76,5 @@ pub fn save_to_new_highest<B: Backend>(version_of: &str, model: &VisionModel<B>)
     model.clone().save_file(
         file_path_str,
         &NamedMpkFileRecorder::<FullPrecisionSettings>::default(),
-    );
+    ).expect("Unable to save file");
 }

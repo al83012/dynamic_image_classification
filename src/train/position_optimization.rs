@@ -4,8 +4,7 @@ use burn::optim::{GradientsAccumulator, GradientsParams};
 use burn::prelude::*;
 use burn::{
     nn::loss::CrossEntropyLoss,
-    prelude::Backend,
-    tensor::{backend::AutodiffBackend, Int, Shape, Tensor},
+    tensor::{backend::AutodiffBackend, Int, Tensor},
 };
 
 use crate::model::{PositioningData, VisionModel};

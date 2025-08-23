@@ -14,7 +14,9 @@ log4rs = "*"
 nannou = "*"
 
 [features]
-default = []
+default = ["train", "display_inference"]
 debug_log = []
 no_pos_proc = []
 no_class_proc = []
+train = []
+display_inference = []

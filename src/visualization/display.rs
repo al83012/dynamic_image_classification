@@ -101,8 +101,6 @@ pub fn view<B: Backend>(app: &nannou::app::App, model: &DisplayData<B>, frame: n
     println!("{frame_id}");
 
     if frame_id >= (model.steps.len() - 1) as u64 * FRAME_PER_STEP as u64 - 1 {
-        // Apparently doesn't work in that version
-        // app.quit();
         collect_frames();
     }
 }
@@ -139,8 +137,6 @@ fn collect_frames() {
         let image_buffer = image.as_rgba8().expect("Can't represent as rgba");
         nannou::image::Frame::new(image_buffer.clone())
     });
-
-
 
     let gif = fs::File::create("./capture.gif").expect("Error creating file");
     let mut gif_encoder = GifEncoder::new(gif);
@@ -193,20 +189,13 @@ pub fn image_rect(app: &App, width: u32, height: u32) -> Rect {
     let window_rect = app.window_rect().pad(50.0);
 
     let (w_w, w_h) = window_rect.w_h();
-    // println!("Window: ({w_w}, {w_h})");
 
     //Maximum available dimensions to image
     let img_fill_w = w_w * 0.75;
     let img_fill_h = w_h;
 
-    // println!("Img Fill: ({img_fill_w}, {img_fill_h})");
-
     let fill_ratio = img_fill_w / img_fill_h;
     let img_ratio = width as f32 / height as f32;
-
-    // println!("Img Fill Ratio: {fill_ratio}");
-
-    // println!("Img Ratio: {img_ratio}");
 
     let (img_w, img_h) = if img_ratio > fill_ratio {
         // Limited by width
@@ -220,8 +209,6 @@ pub fn image_rect(app: &App, width: u32, height: u32) -> Rect {
         (width, height)
     };
 
-    // println!("Img Adj Dim: ({img_w}, {img_h})");
-
     let img_rect = geom::Rect::from_w_h(img_w, img_h)
         .align_middle_y_of(window_rect)
         .align_left_of(window_rect);
@@ -234,26 +221,17 @@ pub fn draw_outputs<B: Backend>(app: &App, model: &DisplayData<B>, t: f32, frame
 
     let step_t = t.fract();
 
-    // println!("At start T = {t}");
-
     let current_tensor: Vec<f32> = if (0.5 - step_t).abs() > 0.5 - 1e-2 {
-        // println!("Full value");
-
         let id = if step_t > 0.5 { full_idx + 1 } else { full_idx };
 
         let tensor = model.steps[id].class_out.clone();
-
-        // println!("Tensor: {tensor:#?}");
 
         let tensor: Tensor<B, 1> = tensor.squeeze_dims(&[0, 1]);
 
         let tensor = burn::tensor::activation::softmax(tensor, 0);
 
-        // println!("After Full value");
-
         tensor.to_data().to_vec().expect("Failed collecting to vec")
     } else {
-        // println!("Lerped value");
         let from: Tensor<B, 1> = model.steps[full_idx]
             .class_out
             .clone()
